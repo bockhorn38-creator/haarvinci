@@ -4,13 +4,15 @@ Haarvinci Desktop öffnet sich als eigenes Programmfenster. Es gibt keine Browse
 
 ## Installieren und zum ersten Mal starten
 
-1. Das Paket **Haarvinci-Windows-Installer** aus dem Windows-Build des Projekts herunterladen. Falls der Download als ZIP kommt, die ZIP-Datei zuerst vollständig entpacken.
+1. Das [geprüfte Windows-Installationspaket 0.2.0](https://github.com/bockhorn38-creator/haarvinci/actions/runs/40419706517/artifacts/12697243075) herunterladen (ca. 160 MB; GitHub-Anmeldung erforderlich). Falls der Download als ZIP kommt, die ZIP-Datei zuerst vollständig entpacken.
 2. `Haarvinci-Windows-Setup-0.2.0.exe` per Doppelklick starten und die deutsche Installation abschließen. Die Installation erfolgt im eigenen Windows-Benutzerkonto und benötigt regulär keine Administratorrechte.
 3. Haarvinci über das neue Symbol auf dem Desktop oder im Windows-Startmenü öffnen.
 4. Beim ersten Start deinen Vornamen, einen Benutzernamen und ein eigenes Passwort mit mindestens zwölf Zeichen festlegen. Das Passwort wird nicht im Klartext gespeichert. Du musst es niemandem mitteilen.
 5. „Mit sechs fiktiven Testkundinnen starten“ kann zum Ausprobieren aktiviert bleiben. In dieser ersten Version ausschließlich erfundene Daten verwenden.
 
 Zielplattform: Windows 10 ab Version 1809 und Windows 11 auf 64-Bit-PCs mit Intel-/AMD-Prozessor. Andere Prozessorarchitekturen und ältere Windows-Versionen sind nicht geprüft. Eine digitale Herausgebersignatur für den Installer ist noch nicht eingerichtet; Prüfsummen werden zusammen mit dem Build bereitgestellt.
+
+Der Build-Download wird 30 Tage aufbewahrt. Die heruntergeladene Installationsdatei kannst du behalten; die installierte App läuft unabhängig von der Verfügbarkeit dieses Downloads. Spätere Builds sind über den Windows-Workflow des Repositorys verfügbar.
 
 ## Benutzen
 

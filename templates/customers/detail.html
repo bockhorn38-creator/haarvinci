@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}{{ customer }}{% endblock %}
+{% block content %}
+    <a class="back-link" href="{% url 'customers:list' %}">{% icon 'back' %}Zurück zu deinen Kundinnen</a>
+    <div class="customer-profile">
+        <span class="avatar profile-large {{ customer.tone }}">{{ customer.initials }}</span>
+        <div>
+            <p class="eyebrow">DEINE KUNDENAKTE</p>
+            <h1>{{ customer }}</h1>
+            <p>Im Kundenbuch seit {{ customer.created_at|date:'d. F Y' }}</p>
+        </div>
+        <a class="button primary" href="{% url 'customers:edit' customer.pk %}">{% icon 'edit' %}Bearbeiten</a>
+    </div>
+    <div class="detail-columns">
+        <div class="detail-main">
+            <section class="panel detail-panel">
+                <h2>{% icon 'user' %}Kontakt &amp; Persönliches</h2>
+                <dl class="detail-grid">
+                    <div>
+                        <dt>Telefonnummer</dt>
+                        <dd>
+                            {% if customer.phone %}
+                                <a href="tel:{{ customer.phone }}">{{ customer.phone }}</a>
+                            {% else %}
+                                <span class="muted">Nicht hinterlegt</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>E-Mail-Adresse</dt>
+                        <dd>
+                            {% if customer.email %}
+                                <a href="mailto:{{ customer.email }}">{{ customer.email }}</a>
+                            {% else %}
+                                <span class="muted">Nicht hinterlegt</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>Anschrift</dt>
+                        <dd>
+                            {% if customer.street or customer.postal_code or customer.city %}
+                                {{ customer.street }}
+                                {% if customer.street %}<br>{% endif %}
+                                {{ customer.postal_code }} {{ customer.city }}
+                            {% else %}
+                                <span class="muted">Nicht hinterlegt</span>
+                            {% endif %}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt>Geburtstag</dt>
+                        <dd>
+                            {{ customer.birthday|date:'d. F Y'|default:'Nicht hinterlegt' }}
+                        </dd>
+                    </div>
+                </dl>
+            </section>
+            <section class="panel detail-panel">
+                <h2>{% icon 'note' %}Persönliche Notizen</h2>
+                {% if customer.notes %}
+                    <div class="customer-notes">{{ customer.notes|linebreaksbr }}</div>
+                {% else %}
+                    <div class="note-empty">
+                        <p>Was macht diese Kundin besonders?</p>
+                        <span>Wünsche, Vorlieben und Details aus eurer Beratung finden hier ihren Platz.</span><a class="small-link" href="{% url 'customers:edit' customer.pk %}">Notiz ergänzen {% icon 'edit' %}</a>
+                    </div>
+                {% endif %}
+            </section>
+        </div>
+        <aside>
+            <section class="consultation-card">
+                <span class="stat-icon rose">{% icon 'calendar' %}</span>
+                <p class="eyebrow">DER ANFANG EURER GESCHICHTE</p>
+                <h2>Erste Beratung</h2>
+                <p class="consultation-date">{{ customer.first_consultation|date:'d. F Y'|default:'Noch nicht eingetragen' }}</p>
+                <p>Ein guter Moment, um Wünsche kennenzulernen und Vertrauen aufzubauen.</p>
+            </section>
+            <section class="panel export-card">
+                <h3>{% icon 'shield' %}Deine Daten im Blick</h3>
+                <p>Alle Angaben dieser Kundenakte als Datei für deine Unterlagen.</p>
+                <a class="button secondary"
+                   href="{% url 'customers:export' customer.pk %}">{% icon 'download' %}Kundenakte exportieren</a>
+            </section>
+            <p class="updated-note">
+                Zuletzt geändert am
+                <br>
+                {{ customer.updated_at|date:'d.m.Y' }} um {{ customer.updated_at|date:'H:i' }} Uhr
+            </p>
+        </aside>
+    </div>
+{% endblock %}

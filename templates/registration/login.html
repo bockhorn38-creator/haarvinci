@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static ui %}
+{% block title %}Willkommen{% endblock %}
+{% block content %}
+    <div class="auth-layout">
+        <section class="auth-story">
+            <a class="brand" href="{% url 'login' %}">
+                <img src="{% static 'img/brand.svg' %}" alt="" width="48" height="48">
+                <span>haarvinci<span class="brand-sub">SCHÖNE VERBINDUNGEN.</span></span></a>
+            <div class="auth-story-copy">
+                <p class="eyebrow">DEIN RAUM. DEINE KUNDINNEN.</p>
+                <h1>
+                    Für die Menschen
+                    <br>
+                    hinter den
+                    <br>
+                    <em>schönen Haaren.</em>
+                </h1>
+                <p>
+                    Dein persönliches Kundenbuch.
+                    <br>
+                    Mit Liebe zum Detail. Mit Zeit für das Wesentliche.
+                </p>
+            </div>
+            <img class="auth-art"
+                 src="{% static 'img/hair-art.svg' %}"
+                 alt=""
+                 width="300"
+                 height="370">
+            <span class="auth-footnote">HAARVERLÄNGERUNG &amp; HAARVERDICHTUNG</span>
+        </section>
+        <section class="auth-form-area">
+            <div class="auth-card">
+                <span class="auth-lock">{% icon 'lock' %}</span>
+                <p class="eyebrow">WILLKOMMEN BEI HAARVINCI</p>
+                <h2>Ein Moment für dich.</h2>
+                <p>Melde dich an und öffne dein Kundenbuch.</p>
+                {% if is_demo %}<div class="auth-demo">Testumgebung · ausschließlich fiktive Kundendaten</div>{% endif %}
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% if form.errors %}
+                        <div class="form-error-summary" role="alert">
+                            <p>Die Anmeldung hat nicht geklappt. Bitte prüfe Benutzername und Passwort.</p>
+                        </div>
+                    {% endif %}
+                    <div class="form-field">
+                        <label for="id_username">Benutzername</label>
+                        <input id="id_username"
+                               name="username"
+                               autocomplete="username"
+                               autocapitalize="none"
+                               required
+                               maxlength="150"
+                               value="{{ form.username.value|default:'' }}">
+                    </div>
+                    <div class="form-field">
+                        <label for="id_password">Passwort</label>
+                        <div class="password-wrap">
+                            <input id="id_password"
+                                   name="password"
+                                   type="password"
+                                   autocomplete="current-password"
+                                   required>
+                            <button class="password-toggle"
+                                    type="button"
+                                    aria-controls="id_password"
+                                    aria-pressed="false">Anzeigen</button>
+                        </div>
+                    </div>
+                    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+                    <button class="button primary auth-submit" type="submit">Kundenbuch öffnen {% icon 'arrow' %}</button>
+                </form>
+                <span class="secure-note">{% icon 'shield' %}Dein persönlicher, geschützter Zugang.</span>
+            </div>
+        </section>
+    </div>
+{% endblock %}

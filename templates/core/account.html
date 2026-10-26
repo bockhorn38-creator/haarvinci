@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Dein Konto{% endblock %}
+{% block content %}
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">DEIN PERSÖNLICHER BEREICH</p>
+            <h1>
+                Ganz bei dir<span class="rose-dot">.</span>
+            </h1>
+            <p>Dein Zugang zu Haarvinci.</p>
+        </div>
+    </div>
+    <div class="account-grid">
+        <section class="panel detail-panel">
+            <h2>{% icon 'user' %}Dein Profil</h2>
+            <dl class="detail-grid">
+                <div>
+                    <dt>Name</dt>
+                    <dd>
+                        {{ user.get_full_name|default:user.username }}
+                    </dd>
+                </div>
+                <div>
+                    <dt>Benutzername</dt>
+                    <dd>
+                        {{ user.username }}
+                    </dd>
+                </div>
+            </dl>
+            <a class="button secondary" href="{% url 'password_change' %}">{% icon 'lock' %}Passwort ändern</a>
+        </section>
+        <section class="panel detail-panel">
+            <h2>{% icon 'shield' %}Dein geschützter Bereich</h2>
+            <p class="body-copy">
+                Deine Kundenakten sind nur mit deinem persönlichen Zugang erreichbar. Melde dich ab, wenn du ein gemeinsam genutztes Gerät verlässt.
+            </p>
+            <form action="{% url 'logout' %}" method="post">
+                {% csrf_token %}
+                <button class="button secondary" type="submit">{% icon 'logout' %}Sicher abmelden</button>
+            </form>
+        </section>
+        <section class="panel detail-panel">
+            <h2>{% icon 'download' %}Haarvinci auf deinem Pixel</h2>
+            <p class="body-copy">
+                Öffne Haarvinci in Chrome über die sichere Internetadresse deiner Installation. Wähle im Browsermenü „Zum Startbildschirm hinzufügen“ oder „App installieren“.
+            </p>
+            <p class="body-copy">Zum Öffnen und Speichern brauchst du eine Internetverbindung.</p>
+        </section>
+    </div>
+{% endblock %}

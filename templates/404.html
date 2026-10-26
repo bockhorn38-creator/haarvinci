@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}Nicht gefunden{% endblock %}
+{% block content %}
+    <section class="panel empty-state">
+        <h1>Hier ist gerade nichts zu finden.</h1>
+        <p>Diese Seite oder Kundenakte ist nicht verfügbar.</p>
+        <a class="button primary" href="{% url 'dashboard' %}">Zur Übersicht</a>
+    </section>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% load static ui %}
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport"
+              content="width=device-width, initial-scale=1, viewport-fit=cover">
+        <meta name="theme-color" content="#5b283e">
+        <meta name="description"
+              content="Haarvinci – Connys persönliches Kundenbuch für Haarverlängerung und Haarverdichtung.">
+        <title>
+            {% block title %}Dein Kundenbuch{% endblock %}
+        · Haarvinci</title>
+        <link rel="icon" href="{% static 'img/brand.svg' %}" type="image/svg+xml">
+        <link rel="apple-touch-icon" href="{% static 'img/icon-192.png' %}">
+        <link rel="manifest" href="{% url 'manifest' %}">
+        <link rel="stylesheet" href="{% static 'css/app.css' %}">
+        <script src="{% static 'js/app.js' %}" defer></script>
+    </head>
+    <body class="{% if not user.is_authenticated %}auth-body{% endif %}">
+        <a class="skip-link" href="#main">Zum Inhalt springen</a>
+        {% if user.is_authenticated %}
+            <aside class="sidebar" aria-label="Hauptnavigation">
+                <a class="brand"
+                   href="{% url 'dashboard' %}"
+                   aria-label="Haarvinci Startseite">
+                    <img src="{% static 'img/brand.svg' %}" width="42" height="42" alt="">
+                    <span>haarvinci<span class="brand-sub">SCHÖNE VERBINDUNGEN.</span></span></a>
+                <div class="sidebar-label">DEIN ARBEITSPLATZ</div>
+                <nav>
+                    <a href="{% url 'dashboard' %}"
+                       class="nav-link {% if nav == 'dashboard' %}active{% endif %}"
+                       {% if nav == 'dashboard' %}aria-current="page"{% endif %}>{% icon 'home' %}Übersicht</a>
+                    <a href="{% url 'customers:list' %}"
+                       class="nav-link {% if nav == 'customers' %}active{% endif %}"
+                       {% if nav == 'customers' %}aria-current="page"{% endif %}>{% icon 'users' %}Kundinnen</a>
+                </nav>
+                <a class="sidebar-note" href="{% url 'customers:create' %}">{% icon 'heart' %}<span>Jede schöne Verbindung
+                    <br>
+                beginnt mit Kennenlernen.</span><strong>Neue Kundin anlegen {% icon 'arrow' %}</strong></a>
+                <div class="sidebar-footer">
+                    <a class="profile" href="{% url 'account' %}"><span class="profile-avatar">{{ user.first_name|default:user.username|slice:':1'|upper }}</span><span><strong>{{ user.first_name|default:user.username }}</strong><small>Dein persönlicher Bereich</small></span>{% icon 'chevron' %}</a>
+                </div>
+            </aside>
+            <div class="workspace">
+                <header class="topbar">
+                    <a class="mobile-brand" href="{% url 'dashboard' %}">
+                        <img src="{% static 'img/brand.svg' %}" alt="" width="32" height="32">
+                        haarvinci</a><span class="topbar-caption">Mit Liebe zum Detail. Für dich und deine Kundinnen.</span>
+                        <div class="topbar-right">
+                            {% if is_demo %}<span class="demo-badge">Testumgebung</span>{% endif %}
+                            <span class="topbar-date">{% icon 'calendar' %}{{ today|date:'d. F Y' }}</span>
+                        </div>
+                    </header>
+                {% endif %}
+                <main id="main"
+                      class="{% if user.is_authenticated %}main-content{% else %}auth-main{% endif %}">
+                    {% if messages %}
+                        <div class="messages" aria-live="polite">
+                            {% for message in messages %}
+                                <div class="message {{ message.tags }}">
+                                    {% icon 'check' %}<span>{{ message }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% block content %}{% endblock %}
+                </main>
+                {% if user.is_authenticated %}
+                    <footer class="page-footer">
+                        <span>haarvinci <span class="footer-dot">·</span> Dein Raum für schöne Verbindungen.</span>
+                        {% if is_demo %}<span>Ausschließlich fiktive Testkundinnen</span>{% endif %}
+                    </footer>
+                </div>
+                <nav class="bottom-nav" aria-label="Mobile Hauptnavigation">
+                    <a href="{% url 'dashboard' %}"
+                       class="{% if nav == 'dashboard' %}active{% endif %}"
+                       {% if nav == 'dashboard' %}aria-current="page"{% endif %}>{% icon 'home' %}<span>Start</span></a>
+                    <a href="{% url 'customers:list' %}"
+                       class="{% if nav == 'customers' %}active{% endif %}"
+                       {% if nav == 'customers' %}aria-current="page"{% endif %}>{% icon 'users' %}<span>Kundinnen</span></a>
+                    <a href="{% url 'customers:create' %}">{% icon 'plus' %}<span>Hinzufügen</span></a>
+                    <a href="{% url 'account' %}"
+                       class="{% if nav == 'account' %}active{% endif %}"
+                       {% if nav == 'account' %}aria-current="page"{% endif %}>{% icon 'user' %}<span>Konto</span></a>
+                </nav>
+            {% endif %}
+        </body>
+    </html>

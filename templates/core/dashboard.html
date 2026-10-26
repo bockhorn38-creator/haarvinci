@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static ui %}
+{% block title %}Übersicht{% endblock %}
+{% block content %}
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">DEIN KUNDENBUCH. DEIN GUTER ÜBERBLICK.</p>
+            <h1>
+                Schön, dass du da bist, {{ user.first_name|default:user.username }}<span class="rose-dot">.</span>
+            </h1>
+            <p>Mehr Zeit für das, was dir am Herzen liegt.</p>
+        </div>
+        <a class="button primary" href="{% url 'customers:create' %}">{% icon 'plus' %}Neue Kundin</a>
+    </div>
+    <section class="welcome-card" aria-labelledby="welcome-title">
+        <div class="welcome-copy">
+            <span class="pill">{% icon 'spark' %} MIT LIEBE VERBUNDEN</span>
+            <h2 id="welcome-title">
+                Schöne Haare beginnen
+                <br>
+                mit einer guten Verbindung.
+            </h2>
+            <p>
+                Eine Kundin. Ihre Wünsche. Eure Geschichte.
+                <br>
+                Alles Wichtige hat hier seinen Platz.
+            </p>
+            <a class="text-link" href="{% url 'customers:list' %}">Dein Kundenbuch öffnen {% icon 'arrow' %}</a>
+        </div>
+        <img class="hair-art"
+             src="{% static 'img/hair-art.svg' %}"
+             alt=""
+             width="300"
+             height="370">
+        <span class="hero-caption">PERSÖNLICH. BESONDERS. HAARVINCI.</span>
+    </section>
+    <div class="stats-grid">
+    <a class="stat-card" href="{% url 'customers:list' %}"><span class="stat-icon rose">{% icon 'users' %}</span>
+    <div>
+        <span class="stat-label">Deine Kundinnen</span><strong>{{ customer_count }}</strong><small>Schöne Verbindungen</small>
+    </div>
+{% icon 'chevron' %}</a>
+<div class="stat-card">
+    <span class="stat-icon sage">{% icon 'spark' %}</span>
+    <div>
+        <span class="stat-label">Neu in diesem Monat</span><strong>{{ new_count }}</strong><small>Im Kundenbuch angelegt</small>
+    </div>
+</div>
+<div class="stat-card">
+    <span class="stat-icon sand">{% icon 'note' %}</span>
+    <div>
+        <span class="stat-label">Mit persönlichen Notizen</span><strong>{{ notes_count }}</strong><small>Weil die Details zählen</small>
+    </div>
+</div>
+</div>
+<div class="dashboard-columns">
+    <section class="panel recent-panel">
+        <div class="section-heading">
+            <div>
+                <h2>Zuletzt hinzugefügt</h2>
+                <p>Die neuesten Gesichter in deinem Kundenbuch.</p>
+            </div>
+            <a class="small-link" href="{% url 'customers:list' %}">Alle ansehen {% icon 'arrow' %}</a>
+        </div>
+        <div class="customer-rows">
+            {% for customer in recent_customers %}
+                {% include 'customers/row.html' %}
+            {% empty %}
+                <div class="empty-state">
+                    <span class="empty-icon">{% icon 'users' %}</span>
+                    <h3>Hier beginnt eure Geschichte.</h3>
+                    <p>Lege deine erste Kundin an und halte fest, was sie besonders macht.</p>
+                    <a class="button primary" href="{% url 'customers:create' %}">{% icon 'plus' %}Erste Kundin anlegen</a>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+    <aside class="care-card">
+        <span class="care-icon">{% icon 'heart' %}</span>
+        <p class="eyebrow">DIE KLEINEN DETAILS</p>
+        <h2>
+            Gut aufgehoben.
+            <br>
+            Gut in Erinnerung.
+        </h2>
+        <p>
+            Lieblingslook, Wünsche oder ein wichtiges Detail aus eurer Beratung: In der Kundenakte geht nichts davon verloren.
+        </p>
+        <a class="text-link" href="{% url 'customers:list' %}">Zu deinen Kundinnen {% icon 'arrow' %}</a>
+        <div class="care-line"></div>
+        <span class="secure-note">{% icon 'lock' %}Nur mit deinem Zugang erreichbar</span>
+    </aside>
+</div>
+{% endblock %}

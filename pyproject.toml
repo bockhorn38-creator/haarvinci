@@ -1,0 +1,25 @@
+[project]
+name = "haarvinci"
+version = "0.1.0"
+description = "Connys persönliches Kundenbuch für Haarverlängerung und Haarverdichtung"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "Django>=5.2,<5.3",
+  "psycopg[binary]>=3.2,<4",
+  "dj-database-url>=3,<4",
+  "python-dotenv>=1.1,<2",
+  "django-axes>=8,<9",
+  "gunicorn>=23,<27",
+  "whitenoise>=6.9,<7",
+]
+
+[dependency-groups]
+dev = ["playwright>=1.56,<2", "ruff>=0.14,<1"]
+
+[tool.ruff]
+line-length = 100
+exclude = ["customers/migrations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]

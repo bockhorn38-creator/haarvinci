@@ -1,0 +1,43 @@
+name: Haarvinci prüfen
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine@sha256:266d3c257594e195b309ae9d1805e54c788f1d7b375f56bf6c367aac6c917e7b
+        env:
+          POSTGRES_DB: haarvinci_ci
+          POSTGRES_USER: haarvinci_ci
+          # Nur für die kurzlebige CI-Testdatenbank, kein tatsächliches Zugangspasswort.
+          POSTGRES_PASSWORD: ci-only-test-database
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U haarvinci_ci -d haarvinci_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      DJANGO_DEBUG: 'true'
+      DJANGO_SECRET_KEY: ci-only-placeholder-key-with-more-than-fifty-characters-not-a-production-secret
+      DATABASE_URL: postgresql://haarvinci_ci:ci-only-test-database@127.0.0.1:5432/haarvinci_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.23'
+      - run: uv sync --frozen
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run python manage.py collectstatic --noinput
+      - run: uv run python manage.py makemigrations --check --dry-run
+      - run: uv run python manage.py test tests --verbosity 2
+      - run: uv run python manage.py check --deploy --fail-level WARNING
+        env:
+          DJANGO_DEBUG: 'false'

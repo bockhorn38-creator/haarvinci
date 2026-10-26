@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Kundinnen{% endblock %}
+{% block content %}
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">DEINE SCHÖNEN VERBINDUNGEN</p>
+            <h1>
+                Deine Kundinnen<span class="rose-dot">.</span>
+            </h1>
+            <p>
+                {{ total }}
+                {% if total == 1 %}
+                    Kundenakte
+                {% else %}
+                    Kundenakten
+                {% endif %}
+                . Jede mit ihrer eigenen Geschichte.
+            </p>
+        </div>
+        <a class="button primary" href="{% url 'customers:create' %}">{% icon 'plus' %}Neue Kundin</a>
+    </div>
+    <form class="search-bar" method="get" role="search">
+        <label class="sr-only" for="customer-search">Kundinnen nach Name, Telefon oder E-Mail suchen</label>
+        {% icon 'search' %}
+        <input id="customer-search"
+               name="q"
+               type="search"
+               value="{{ query }}"
+               maxlength="200"
+               placeholder="Name, Telefonnummer oder E-Mail suchen …"
+               autocomplete="off">
+        <button class="button primary" type="submit">Suchen</button>
+    </form>
+    <div class="list-caption">
+        <span>
+            {% if query %}
+                {{ page.paginator.count }}
+                {% if page.paginator.count == 1 %}
+                    Ergebnis
+                {% else %}
+                    Ergebnisse
+                {% endif %}
+                für „{{ query }}“
+            {% else %}
+                Alle Kundinnen
+            {% endif %}
+        </span>
+        {% if query %}
+            <a class="small-link" href="{% url 'customers:list' %}">Suche zurücksetzen</a>
+        {% else %}
+            <span>Nach Nachnamen sortiert</span>
+        {% endif %}
+    </div>
+    <div class="customer-grid">
+        {% for customer in page %}
+            <a class="customer-card" href="{% url 'customers:detail' customer.pk %}">
+                <div class="customer-card-top">
+                    <span class="avatar large {{ customer.tone }}">{{ customer.initials }}</span>{% icon 'chevron' %}
+                </div>
+                <h2>{{ customer }}</h2>
+                <p class="card-contact">
+                    {% if customer.phone %}
+                        {% icon 'phone' %}{{ customer.phone }}
+                    {% else %}
+                        {% icon 'mail' %}{{ customer.email }}
+                    {% endif %}
+                </p>
+                <div class="card-divider"></div>
+                <div class="card-bottom">
+                    <span>{% icon 'calendar' %}
+                        {% if customer.first_consultation %}
+                            Beratung · {{ customer.first_consultation|date:'d.m.Y' }}
+                        {% else %}
+                            Beratung noch offen
+                        {% endif %}
+                    </span>
+                    {% if customer.notes %}
+                        <span class="note-indicator" aria-label="Notizen vorhanden">{% icon 'note' %}</span>
+                    {% endif %}
+                </div>
+            </a>{% empty %}
+            <div class="panel empty-state full-width">
+                <span class="empty-icon">{% icon 'search' %}</span>
+                <h2>
+                    {% if query %}
+                        Noch keine passende Verbindung.
+                    {% else %}
+                        Platz für deine erste Kundin.
+                    {% endif %}
+                </h2>
+                <p>
+                    {% if query %}
+                        Versuche es mit einem anderen Namen, einer Telefonnummer oder E-Mail-Adresse.
+                    {% else %}
+                        Lege eine Kundenakte an. Kontaktdaten und persönliche Notizen sind dann immer griffbereit.
+                    {% endif %}
+                </p>
+                {% if query %}
+                    <a class="button secondary" href="{% url 'customers:list' %}">Alle Kundinnen anzeigen</a>
+                {% else %}
+                    <a class="button primary" href="{% url 'customers:create' %}">{% icon 'plus' %}Kundin anlegen</a>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+    {% if page.has_other_pages %}
+        <nav class="pagination" aria-label="Seiten der Kundinnenliste">
+            {% if page.has_previous %}
+                <a class="button secondary"
+                   href="?q={{ query|urlencode }}&amp;seite={{ page.previous_page_number }}">{% icon 'back' %}Zurück</a>
+            {% endif %}
+            <span>Seite {{ page.number }} von {{ page.paginator.num_pages }}</span>
+            {% if page.has_next %}
+                <a class="button secondary"
+                   href="?q={{ query|urlencode }}&amp;seite={{ page.next_page_number }}">Weiter{% icon 'arrow' %}</a>
+            {% endif %}
+        </nav>
+    {% endif %}
+{% endblock %}

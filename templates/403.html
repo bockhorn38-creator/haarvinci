@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block title %}Bitte erneut versuchen{% endblock %}
+{% block content %}
+    <section class="panel empty-state">
+        <h1>Bitte öffne die Seite noch einmal.</h1>
+        <p>Deine Anfrage konnte aus Sicherheitsgründen nicht ausgeführt werden. Es wurden keine Änderungen gespeichert.</p>
+        <a class="button primary" href="{% url 'dashboard' %}">Zur Übersicht</a>
+    </section>
+{% endblock %}

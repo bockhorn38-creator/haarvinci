@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Kurze Sicherheitspause{% endblock %}
+{% block content %}
+    <section class="panel empty-state locked-card">
+        <span class="empty-icon">{% icon 'lock' %}</span>
+        <h1>Eine kurze Sicherheitspause.</h1>
+        <p>Es gab mehrere fehlgeschlagene Anmeldeversuche. Bitte versuche es in 15 Minuten erneut.</p>
+        <a class="button secondary" href="{% url 'login' %}">Zur Anmeldung</a>
+    </section>
+{% endblock %}

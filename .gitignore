@@ -1,0 +1,13 @@
+.venv/
+.env
+.env.*
+!.env.example
+.local/
+backups/
+staticfiles/
+__pycache__/
+*.py[cod]
+.coverage
+.ruff_cache/
+test-results/
+.DS_Store

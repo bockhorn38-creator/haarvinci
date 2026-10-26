@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}
+    {% if editing %}
+        Kundenakte bearbeiten
+    {% else %}
+        Neue Kundin
+    {% endif %}
+{% endblock %}
+{% block content %}
+    <a class="back-link"
+       href="{% if editing %}{% url 'customers:detail' customer.pk %}{% else %}{% url 'customers:list' %}{% endif %}">{% icon 'back' %}
+        {% if editing %}
+            Zurück zur Kundenakte
+        {% else %}
+            Zurück zu deinen Kundinnen
+        {% endif %}
+    </a>
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">
+                {% if editing %}
+                    GUT AUF DEM NEUESTEN STAND
+                {% else %}
+                    EINE NEUE SCHÖNE VERBINDUNG
+                {% endif %}
+            </p>
+            <h1>{% if editing %}Kundenakte bearbeiten{% else %}Lernen wir sie kennen{% endif %}<span class="rose-dot">.</span></h1>
+            <p>
+                {% if editing %}
+                    Hier kannst du die Angaben von {{ customer }} aktualisieren.
+                {% else %}
+                    Die wichtigsten Angaben zuerst. Alles Weitere darf wachsen.
+                {% endif %}
+            </p>
+        </div>
+    </div>
+    <form method="post" class="customer-form" novalidate>
+        {% csrf_token %}{{ form.version }}
+        {% if form.errors %}
+            <div class="form-error-summary" role="alert" tabindex="-1">
+                <h2>Bitte prüfe deine Angaben.</h2>
+                {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <p>
+                            <a href="#{{ field.id_for_label }}">{{ field.label }}: {{ error }}</a>
+                        </p>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+        {% endif %}
+        <div class="form-layout">
+            <div class="form-sections">
+                <section class="panel form-section">
+                    <div class="form-section-title">
+                        <span class="section-number">01</span>
+                        <div>
+                            <h2>So erreichen wir sie</h2>
+                            <p>Name und mindestens eine Kontaktmöglichkeit.</p>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        {% include 'customers/field.html' with field=form.first_name %}
+                        {% include 'customers/field.html' with field=form.last_name %}
+                        {% include 'customers/field.html' with field=form.phone %}
+                        {% include 'customers/field.html' with field=form.email %}
+                    </div>
+                </section>
+                <section class="panel form-section">
+                    <div class="form-section-title">
+                        <span class="section-number">02</span>
+                        <div>
+                            <h2>Ein bisschen persönlicher</h2>
+                            <p>Was du bereits weißt, kannst du hier ergänzen.</p>
+                        </div>
+                    </div>
+                    <div class="form-grid">
+                        {% include 'customers/field.html' with field=form.birthday %}
+                        {% include 'customers/field.html' with field=form.first_consultation %}
+                        <div class="full-width">{% include 'customers/field.html' with field=form.street %}</div>
+                        {% include 'customers/field.html' with field=form.postal_code %}
+                        {% include 'customers/field.html' with field=form.city %}
+                    </div>
+                </section>
+                <section class="panel form-section">
+                    <div class="form-section-title">
+                        <span class="section-number">03</span>
+                        <div>
+                            <h2>Die kleinen Details</h2>
+                            <p>Platz für Wünsche und persönliche Notizen.</p>
+                        </div>
+                    </div>
+                    {% include 'customers/field.html' with field=form.notes %}
+                </section>
+            </div>
+            <aside class="form-aside">
+                <div class="care-card">
+                    <span class="care-icon">{% icon 'heart' %}</span>
+                    <h2>
+                        Jede Kundin
+                        <br>
+                        ist besonders.
+                    </h2>
+                    <p>Ein paar persönliche Details machen aus einer Kundenakte eure gemeinsame Geschichte.</p>
+                    <div class="care-line"></div>
+                    <span class="secure-note">{% icon 'lock' %}Geschützt in deinem Kundenbuch</span>
+                </div>
+            </aside>
+        </div>
+        <div class="form-actions">
+            <span>{% icon 'shield' %}Deine Angaben werden sicher gespeichert.</span>
+            <div>
+                <a class="button secondary"
+                   href="{% if editing %}{% url 'customers:detail' customer.pk %}{% else %}{% url 'customers:list' %}{% endif %}">Abbrechen</a>
+                <button class="button primary" type="submit">
+                    {% icon 'check' %}
+                    {% if editing %}
+                        Änderungen speichern
+                    {% else %}
+                        Kundin speichern
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+    </form>
+{% endblock %}

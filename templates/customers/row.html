@@ -1,0 +1,2 @@
+{% load ui %}
+<a class="customer-row" href="{% url 'customers:detail' customer.pk %}"><span class="avatar {{ customer.tone }}">{{ customer.initials }}</span><span class="row-name"><strong>{{ customer }}</strong><small>{{ customer.phone|default:customer.email|default:'Kontaktdaten ergänzen' }}</small></span><span class="row-date">{{ customer.created_at|date:'d. M Y' }}</span>{% icon 'chevron' %}</a>

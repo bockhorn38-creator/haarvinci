@@ -126,6 +126,19 @@ class CustomerWorkflowTests(TestCase):
                 self.assertContains(response, "Marie Sommer")
                 self.assertEqual(response.context["page"].paginator.count, 1)
 
+    def test_german_names_are_searchable_independent_of_database_collation(self):
+        Customer.objects.create(
+            owner=self.owner,
+            first_name="Jördis",
+            last_name="Müller-Weiß",
+            email="jordis@example.com",
+        )
+        for query in ["JÖRDIS", "MÜLLER", "WEISS"]:
+            with self.subTest(query=query):
+                response = self.client.get(reverse("customers:list"), {"q": query})
+                self.assertContains(response, "Jördis Müller-Weiß")
+                self.assertEqual(response.context["page"].paginator.count, 1)
+
     def test_empty_search_result(self):
         response = self.client.get(reverse("customers:list"), {"q": "ExistiertNicht"})
         self.assertContains(response, "Noch keine passende Verbindung")

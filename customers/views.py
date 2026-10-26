@@ -1,4 +1,5 @@
 import json
+import unicodedata
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -20,12 +21,7 @@ def customer_list(request):
     count = customers.count()
     query = request.GET.get("q", "").strip()[:200]
     for term in query.split():
-        match = (
-            Q(first_name__icontains=term)
-            | Q(last_name__icontains=term)
-            | Q(email__icontains=term)
-            | Q(phone__icontains=term)
-        )
+        match = Q(search_text__contains=unicodedata.normalize("NFKC", term).casefold())
         digits = "".join(c for c in term if c.isdigit())
         if digits:
             match |= Q(phone_digits__contains=digits)

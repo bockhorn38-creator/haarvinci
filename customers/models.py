@@ -1,3 +1,4 @@
+import unicodedata
 import uuid
 
 from django.conf import settings
@@ -21,6 +22,7 @@ class Customer(models.Model):
     last_name = models.CharField("Nachname", max_length=100)
     phone = models.CharField("Telefonnummer", max_length=40, blank=True)
     phone_digits = models.CharField(max_length=40, blank=True, editable=False)
+    search_text = models.TextField(blank=True, editable=False)
     email = models.EmailField("E-Mail-Adresse", blank=True)
     street = models.CharField("Straße und Hausnummer", max_length=160, blank=True)
     postal_code = models.CharField("Postleitzahl", max_length=12, blank=True)
@@ -52,4 +54,8 @@ class Customer(models.Model):
 
     def save(self, *args, **kwargs):
         self.phone_digits = "".join(c for c in self.phone if c.isdigit())
+        self.search_text = unicodedata.normalize(
+            "NFKC",
+            "\n".join([self.first_name, self.last_name, self.phone, self.phone_digits, self.email]),
+        ).casefold()
         super().save(*args, **kwargs)

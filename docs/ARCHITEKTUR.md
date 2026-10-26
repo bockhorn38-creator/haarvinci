@@ -36,3 +36,13 @@ Die Oberfläche ist deutsch, für Touch ausgelegt, mit unterer Navigation auf Sm
 - `assistant`: Adapter an vorhandene Dienste. Änderungen zuerst als Vorschlag und erst nach Bestätigung ausführen. Keine KI-Abhängigkeit in Phase 1.
 
 Es werden keine leeren Datenbanktabellen, Fake-Kalender oder funktionslosen Menüpunkte vorab gebaut. Kein Löschen von Kundinnen in Phase 1; Lösch-/Aufbewahrungsregeln werden vor echtem Betrieb fachlich festgelegt. Export ist bereits verfügbar.
+
+## Desktop-Version für Windows (0.2)
+
+Der aktuelle Auftrag ergänzt eine eigenständige Windows-Anwendung. PySide6/Qt WebEngine zeigt dieselben fachlichen Oberflächen in einem eigenen, abgeschotteten Programmfenster. Waitress startet den Django-Kern intern an 127.0.0.1 mit zufälligem Port; ein pro Start erneuerter privater Header schränkt den Zugriff auf dieses Fenster ein. Es gibt keinen Node-Zugriff, keine JavaScript-Brücke zu Dateisystemfunktionen und keine freien externen Navigationen.
+
+Getrennte Einstellungen nutzen gemeinsame Fachmodule: `config.settings` für PostgreSQL/Server, `config.desktop_settings` für SQLite/Desktop. SQLite ist hier die echte lokale Datenbank einer Einzelplatzanwendung; sie wird mit dem Programm geliefert und benötigt keinen separaten Datenbankdienst. Explizite IMMEDIATE-Transaktionen schützen Änderungen auch auf SQLite vor paralleler Überschreibung. Suchdaten werden in Unicode-NFKC/Casefold normalisiert, damit Umlaute und ß auf beiden Datenbanken konsistent gefunden werden. Bestehende Daten werden durch Migration ergänzt.
+
+Der erste Start richtet einen persönlichen Zugang ein. Wahlweise werden sechs fiktive Testkundinnen angelegt. Fenster, Sicherungsdialoge, Export, Vergrößerung und Wiederherstellung gehören zur Desktop-Hülle. Sicherungen verwenden einen konsistenten SQLite-Snapshot in einer einzelnen geprüften `.haarvinci`-Datei. Sie enthalten keine Klartextpasswörter. Vor einer Wiederherstellung wird der aktuelle Datenstand zusätzlich gesichert; der eigentliche Austausch erfolgt vor Dienststart und unter Instanzsperre.
+
+PyInstaller bündelt Python, Qt, Django, Waitress, Vorlagen und statische Dateien. Inno Setup erstellt einen deutschen Installer mit Desktop-/Startmenüverknüpfung. Benutzerdaten liegen außerhalb des Installationsordners und bleiben bei einer Deinstallation erhalten. Die Windows-Installation wird auf Windows gebaut und das tatsächlich installierte Programm mit fiktiven Daten geprüft. Der Desktop-Stand benötigt kein Internet; mehrere Geräte werden noch nicht synchronisiert.

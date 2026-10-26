@@ -1,0 +1,93 @@
+name: Haarvinci für Windows bauen
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'desktop/**'
+      - 'desktop_app/**'
+      - 'config/**'
+      - 'customers/**'
+      - 'core/**'
+      - 'templates/**'
+      - 'static/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/desktop-windows.yml'
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      QT_QPA_PLATFORM: offscreen
+      QTWEBENGINE_CHROMIUM_FLAGS: --disable-gpu --lang=de-DE
+      DJANGO_SETTINGS_MODULE: tests.desktop_settings
+      HAARVINCI_DATA_DIR: .local/ci-desktop-database
+      HAARVINCI_DESKTOP_SECRET: ci-only-test-secret-for-an-isolated-database-with-at-least-fifty-characters
+      HAARVINCI_DESKTOP_TOKEN: ci-only-local-window-test-token
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.23'
+      - name: Abhängigkeiten installieren
+        run: uv sync --frozen --extra desktop --group desktop-build
+      - name: SQLite-Regressionstests und Code prüfen
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force .local/ci-desktop-database | Out-Null
+          uv run --frozen --extra desktop --group desktop-build ruff check .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          uv run --frozen --extra desktop --group desktop-build python manage.py test tests --verbosity 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Eigenständiges Programm bauen
+        shell: pwsh
+        run: |
+          uv run --frozen --extra desktop --group desktop-build python desktop/prepare_assets.py
+          uv run --frozen --extra desktop --group desktop-build python desktop/collect_licenses.py
+          uv run --frozen --extra desktop --group desktop-build pyinstaller --noconfirm --clean desktop/Haarvinci.spec
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Windows-Installer erstellen
+        shell: pwsh
+        run: |
+          $compiler = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (!(Test-Path $compiler)) { throw 'Inno Setup ist auf dem Windows-Runner nicht installiert.' }
+          & $compiler desktop/installer.iss
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Installer und installiertes Programm tatsächlich prüfen
+        shell: pwsh
+        run: |
+          $install = Join-Path $env:RUNNER_TEMP 'Haarvinci Installation'
+          $data = Join-Path $env:RUNNER_TEMP 'Haarvinci Prüfdaten'
+          $result = Join-Path $env:GITHUB_WORKSPACE 'test-results\desktop\windows-smoke.json'
+          $setup = (Get-ChildItem dist/installer/*.exe | Select-Object -First 1).FullName
+          $installer = Start-Process -FilePath $setup -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /DIR=`"$install`"" -PassThru
+          if (!$installer.WaitForExit(180000)) { Stop-Process -Id $installer.Id; throw 'Installer-Zeitlimit überschritten.' }
+          if ($installer.ExitCode -ne 0) { throw "Installation fehlgeschlagen: $($installer.ExitCode)" }
+          $program = Start-Process -FilePath "$install\Haarvinci.exe" -ArgumentList "--smoke-test --data-dir `"$data`" --test-result `"$result`"" -PassThru
+          if (!$program.WaitForExit(180000)) { Stop-Process -Id $program.Id; throw 'Desktop-Prüfung hat das Zeitlimit überschritten.' }
+          if (!(Test-Path $result)) { throw 'Das installierte Programm lieferte kein Prüfergebnis.' }
+          $report = Get-Content $result -Raw | ConvertFrom-Json
+          if ($program.ExitCode -ne 0 -or $report.status -ne 'passed') { throw 'Desktop-Funktionsprüfung fehlgeschlagen.' }
+          Get-FileHash $setup -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLower())  $([System.IO.Path]::GetFileName($setup))" } | Set-Content dist/installer/SHA256SUMS.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Haarvinci-Windows-Installer
+          path: dist/installer/*
+          compression-level: 0
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Windows-Pruefergebnisse
+          path: |
+            test-results/desktop/*.json
+            test-results/desktop/*.png
+            build/Haarvinci/warn-Haarvinci.txt
+          if-no-files-found: ignore

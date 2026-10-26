@@ -40,6 +40,13 @@
                 <button class="button secondary" type="submit">{% icon 'logout' %}Sicher abmelden</button>
             </form>
         </section>
+        {% if desktop_mode %}
+        <section class="panel detail-panel">
+            <h2>{% icon 'download' %}Deine Daten gut aufgehoben</h2>
+            <p class="body-copy">Deine Kundenakten werden auf diesem Computer gespeichert. Über das Programmmenü „Datei → Datensicherung erstellen“ kannst du alle Daten auf einen USB-Stick oder anderen Datenträger sichern.</p>
+            <p class="body-copy">Haarvinci legt zusätzlich automatisch lokale Sicherungen an. Zum Arbeiten brauchst du keine Internetverbindung.</p>
+        </section>
+        {% else %}
         <section class="panel detail-panel">
             <h2>{% icon 'download' %}Haarvinci auf deinem Pixel</h2>
             <p class="body-copy">
@@ -47,5 +54,6 @@
             </p>
             <p class="body-copy">Zum Öffnen und Speichern brauchst du eine Internetverbindung.</p>
         </section>
+        {% endif %}
     </div>
 {% endblock %}

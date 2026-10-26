@@ -11,3 +11,7 @@ __pycache__/
 .ruff_cache/
 test-results/
 .DS_Store
+dist/
+build/
+*.haarvinci
+*.sqlite3

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% load static ui %}
+{% block title %}Dein Haarvinci einrichten{% endblock %}
+{% block content %}
+<div class="auth-layout"><section class="auth-story">
+<a class="brand" href="{% url 'desktop_setup' %}"><img src="{% static 'img/brand.svg' %}" width="48" height="48" alt=""><span>haarvinci<span class="brand-sub">SCHÖNE VERBINDUNGEN.</span></span></a>
+<div class="auth-story-copy"><p class="eyebrow">DEIN PERSÖNLICHES KUNDENBUCH</p><h1>Ein guter Anfang.<br>Ein Platz für<br><em>schöne Verbindungen.</em></h1><p>Willkommen in deinem Haarvinci.<br>Deine Kundenakten bleiben auf diesem Computer.</p></div><img class="auth-art" src="{% static 'img/hair-art.svg' %}" alt="" width="300" height="370"><span class="auth-footnote">DEINE DESKTOP-APP FÜR PC &amp; LAPTOP</span></section>
+<section class="auth-form-area"><div class="auth-card setup-card"><p class="eyebrow">NUR BEIM ERSTEN START</p><h2>Mach es zu deinem.</h2><p>Lege deinen persönlichen Zugang an. Dein Passwort bleibt bei dir.</p>
+<form method="post" novalidate>{% csrf_token %}
+{% if form.errors %}<div class="form-error-summary" role="alert">Bitte prüfe deine Angaben.{{ form.non_field_errors }}</div>{% endif %}
+{% for field in form %}{% if field.name != 'demo_data' %}<div class="form-field"><label for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<div class="field-help">{{ field.help_text|safe }}</div>{% endif %}{% for error in field.errors %}<p class="field-error">{{ error }}</p>{% endfor %}</div>{% endif %}{% endfor %}
+<label class="checkbox-label">{{ form.demo_data }}<span>{{ form.demo_data.label }}</span></label>
+<button class="button primary auth-submit" type="submit">Mein Kundenbuch einrichten {% icon 'arrow' %}</button>
+</form><span class="secure-note">{% icon 'shield' %}Lokal gespeichert. Mit deinem Zugang geschützt.</span></div></section></div>
+{% endblock %}

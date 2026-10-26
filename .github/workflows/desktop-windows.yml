@@ -44,8 +44,14 @@ jobs:
           New-Item -ItemType Directory -Force .local/ci-desktop-database | Out-Null
           uv run --frozen --extra desktop --group desktop-build ruff check .
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          uv run --frozen --extra desktop --group desktop-build python manage.py test tests --verbosity 2
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $output = & uv run --frozen --extra desktop --group desktop-build python manage.py test tests --verbosity 2 2>&1 | Out-String
+          $testExit = $LASTEXITCODE
+          Write-Output $output
+          if ($testExit -ne 0) {
+            $diagnostic = $output.Substring([Math]::Max(0, $output.Length - 15000)).Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Windows Desktop Testdetails::$diagnostic"
+            exit $testExit
+          }
       - name: Eigenständiges Programm bauen
         shell: pwsh
         run: |

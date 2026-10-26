@@ -3,6 +3,7 @@ import json
 import sqlite3
 import tempfile
 import zipfile
+from contextlib import closing
 from pathlib import Path
 from unittest import TestCase
 
@@ -25,7 +26,7 @@ class DesktopStorageTests(TestCase):
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
         self.database = self.root / "haarvinci.sqlite3"
-        with sqlite3.connect(self.database) as db:
+        with closing(sqlite3.connect(self.database)) as db, db:
             db.executescript(
                 "CREATE TABLE auth_user(id INTEGER PRIMARY KEY); CREATE TABLE django_migrations(id INTEGER PRIMARY KEY); CREATE TABLE customers_customer(id INTEGER PRIMARY KEY, name TEXT); INSERT INTO customers_customer(name) VALUES ('Fiktive Kundin');"
             )
@@ -41,10 +42,10 @@ class DesktopStorageTests(TestCase):
         archive = create_backup(self.database, self.root / "sicherung.haarvinci")
         metadata, _ = validate_backup(archive)
         self.assertEqual(metadata["tables"]["customers_customer"], 1)
-        with sqlite3.connect(self.database) as db:
+        with closing(sqlite3.connect(self.database)) as db, db:
             db.execute("UPDATE customers_customer SET name='Vor Wiederherstellung'")
         restore_backup(archive, self.root)
-        with sqlite3.connect(self.database) as db:
+        with closing(sqlite3.connect(self.database)) as db, db:
             self.assertEqual(
                 db.execute("SELECT name FROM customers_customer").fetchone()[0], "Fiktive Kundin"
             )
@@ -53,7 +54,7 @@ class DesktopStorageTests(TestCase):
         _, content = validate_backup(safety[0])
         check = self.root / "safety.sqlite3"
         check.write_bytes(content)
-        with sqlite3.connect(check) as db:
+        with closing(sqlite3.connect(check)) as db, db:
             self.assertEqual(
                 db.execute("SELECT name FROM customers_customer").fetchone()[0],
                 "Vor Wiederherstellung",

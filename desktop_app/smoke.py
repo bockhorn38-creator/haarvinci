@@ -6,6 +6,7 @@ import sqlite3
 import tempfile
 import urllib.error
 import urllib.request
+from contextlib import closing
 from pathlib import Path
 
 from PySide6.QtCore import QTimer, QUrl
@@ -141,13 +142,13 @@ class DesktopSmoke:
                 with tempfile.TemporaryDirectory() as temporary:
                     target = Path(temporary)
                     restore_backup(archive, target)
-                    with sqlite3.connect(target / "haarvinci.sqlite3") as db:
+                    with closing(sqlite3.connect(target / "haarvinci.sqlite3")) as db, db:
                         assert (
                             db.execute("SELECT count(*) FROM customers_customer").fetchone()[0] == 7
                         )
                         db.execute("DELETE FROM customers_customer")
                     restore_backup(archive, target)
-                    with sqlite3.connect(target / "haarvinci.sqlite3") as db:
+                    with closing(sqlite3.connect(target / "haarvinci.sqlite3")) as db, db:
                         assert (
                             db.execute("SELECT count(*) FROM customers_customer").fetchone()[0] == 7
                         )

@@ -2,7 +2,7 @@ name: Vorhandene Android-Test-APK veröffentlichen
 
 on:
   push:
-    tags: ['publish-android-test-v0.4.0']
+    tags: ['publish-android-test-v0.4.0*']
   workflow_dispatch:
     inputs:
       source_run:
@@ -83,6 +83,7 @@ jobs:
       - name: Einzelne APK als GitHub-Testrelease bereitstellen
         run: |
           set -euo pipefail
+          exec > >(tee release.log) 2>&1
           cat > release-notes.md <<'NOTES'
           ## Haarvinci Android-Testversion 0.4.0
 
@@ -99,13 +100,35 @@ jobs:
           `SHA256SUMS.txt` und `SIGNATUR.txt` dokumentieren Prüfsumme und APK-Zertifikat.
           NOTES
           printf '\nGeprüfter Build: https://github.com/%s/actions/runs/%s\n' "$GH_REPO" "$SOURCE_RUN" >> release-notes.md
-          gh release create "$RELEASE_TAG" \
-            --target "$SOURCE_SHA" \
-            --title 'Haarvinci Android-Testversion 0.4.0' \
-            --notes-file release-notes.md \
-            --draft --prerelease \
-            apk/Haarvinci-Android-Test-0.4.0.apk apk/SHA256SUMS.txt apk/SIGNATUR.txt
-          gh release edit "$RELEASE_TAG" --draft=false --prerelease
+          if gh release view "$RELEASE_TAG" --json targetCommitish,isDraft > existing.json 2>/dev/null; then
+            python - <<'PYVERIFY'
+          import json, os
+          from pathlib import Path
+          release = json.loads(Path('existing.json').read_text())
+          assert release['targetCommitish'] == os.environ['SOURCE_SHA'], 'Ein anderes Release-Ziel darf nicht überschrieben werden'
+          assert release['isDraft'], 'Ein veröffentlichtes Release wird nicht verändert'
+          PYVERIFY
+            gh release upload "$RELEASE_TAG" --clobber apk/Haarvinci-Android-Test-0.4.0.apk apk/SHA256SUMS.txt apk/SIGNATUR.txt
+          else
+            gh release create "$RELEASE_TAG" \
+              --verify-tag --target "$SOURCE_SHA" \
+              --title 'Haarvinci Android-Testversion 0.4.0' \
+              --notes-file release-notes.md \
+              --draft --prerelease \
+              apk/Haarvinci-Android-Test-0.4.0.apk apk/SHA256SUMS.txt apk/SIGNATUR.txt
+          fi
+          gh release edit "$RELEASE_TAG" --draft=false --prerelease --notes-file release-notes.md
           gh release view "$RELEASE_TAG" --json url,assets
           curl --fail --location --retry 3 --output downloaded.apk "https://github.com/$GH_REPO/releases/download/$RELEASE_TAG/Haarvinci-Android-Test-0.4.0.apk"
           cmp apk/Haarvinci-Android-Test-0.4.0.apk downloaded.apk
+      - name: Release-Fehler als Check-Hinweis ausgeben
+        if: failure()
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('release.log')
+          if path.exists():
+              text = path.read_text(errors='replace')[-12000:]
+              text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+              print(f'::error title=Release-Veröffentlichung::{text}')
+          PY

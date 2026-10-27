@@ -146,11 +146,21 @@ class DesktopSmoke:
                         assert (
                             db.execute("SELECT count(*) FROM customers_customer").fetchone()[0] == 7
                         )
-                        db.execute("DELETE FROM customers_customer")
+                        db.execute(
+                            "UPDATE customers_customer SET notes = ? WHERE last_name = ?",
+                            ("Nach der Sicherung im Test verändert", "Testgarten"),
+                        )
                     restore_backup(archive, target)
                     with closing(sqlite3.connect(target / "haarvinci.sqlite3")) as db, db:
                         assert (
                             db.execute("SELECT count(*) FROM customers_customer").fetchone()[0] == 7
+                        )
+                        assert (
+                            db.execute(
+                                "SELECT notes FROM customers_customer WHERE last_name = ?",
+                                ("Testgarten",),
+                            ).fetchone()[0]
+                            == "Geändert und dauerhaft in der Desktop-Datenbank gespeichert."
                         )
                     assert list((target / "Sicherungen").glob("Vor-Wiederherstellung-*.haarvinci"))
                 self.stage = 8

@@ -2,6 +2,10 @@
 
 Connys persönliches Kundenbuch für Haarverlängerung und Haarverdichtung. Die erste Version enthält eine vollständig deutsche, auf Smartphones abgestimmte Oberfläche, Anmeldung und Kundenverwaltung mit echter PostgreSQL-Datenbank.
 
+## Android-Version für das Pixel
+
+Haarvinci wird zusätzlich als eigenständige Android-Test-APK mit lokaler Datenbank gebaut. Installation, Sicherungen, Geräteübernahme und Grenzen der Testsignierung stehen in [docs/ANDROID.md](docs/ANDROID.md). Die APK wird im Workflow „Haarvinci Android-APK prüfen“ auf einem emulierten Pixel installiert und funktional geprüft.
+
 ## Windows-Version für PC und Laptop
 
 Die eigenständige Desktop-Version startet per Programmsymbol in einem eigenen Fenster. Sie benötigt für die Nutzung weder Browser noch Python, Docker oder Internet. Installation, Ersteinrichtung, Datensicherung und Bedienung stehen in [docs/DESKTOP.md](docs/DESKTOP.md). Das Windows-Installationspaket wird durch den Workflow „Haarvinci für Windows bauen“ erstellt und geprüft.

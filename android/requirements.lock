@@ -1,0 +1,8 @@
+# Aus uv.lock erzeugt; nur plattformunabhängige Pakete.
+asgiref==3.13.0 --hash=sha256:f9596a2434512686473d50f96ff6207fbba49ae1a785dfac614df4aeb085674d
+django==5.2.18 --hash=sha256:92ed81d500be6408ecd704d7bd1366c534f30427bffcc63c5fefb129561aec7c
+django-axes==8.3.1 --hash=sha256:f7887582fd12713064f1602091ff6152752becae5e891a15bf802746cab0f51a
+sqlparse==0.6.0 --hash=sha256:b861c0288ce2fa56209a9a6412d2e066ac664b3873b89c26c9d8415e8e32996f
+tzdata==2026.5 --hash=sha256:b683bd1b6659ddcd810ff02ad09ba821d4bf1065072805063eb35c49617905ac
+waitress==3.0.2 --hash=sha256:c56d67fd6e87c2ee598b76abdd4e96cfad1f24cacdea5078d382b1f9d7b5ed2e
+whitenoise==6.12.0 --hash=sha256:fc5e8c572e33ebf24795b47b6a7da8da3c00cff2349f5b04c02f28d0cc5a3cc2

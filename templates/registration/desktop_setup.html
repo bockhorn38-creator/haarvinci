@@ -4,7 +4,7 @@
 {% block content %}
 <div class="auth-layout"><section class="auth-story">
 <a class="brand" href="{% url 'desktop_setup' %}"><img src="{% static 'img/brand.svg' %}" width="48" height="48" alt=""><span>haarvinci<span class="brand-sub">SCHÖNE VERBINDUNGEN.</span></span></a>
-<div class="auth-story-copy"><p class="eyebrow">DEIN PERSÖNLICHES KUNDENBUCH</p><h1>Ein guter Anfang.<br>Ein Platz für<br><em>schöne Verbindungen.</em></h1><p>Willkommen in deinem Haarvinci.<br>Deine Kundenakten bleiben auf diesem Computer.</p></div><img class="auth-art" src="{% static 'img/hair-art.svg' %}" alt="" width="300" height="370"><span class="auth-footnote">DEINE DESKTOP-APP FÜR PC &amp; LAPTOP</span></section>
+<div class="auth-story-copy"><p class="eyebrow">DEIN PERSÖNLICHES KUNDENBUCH</p><h1>Ein guter Anfang.<br>Ein Platz für<br><em>schöne Verbindungen.</em></h1><p>Willkommen in deinem Haarvinci.<br>Deine Kundenakten bleiben auf diesem {% if android_mode %}Gerät{% else %}Computer{% endif %}.</p></div><img class="auth-art" src="{% static 'img/hair-art.svg' %}" alt="" width="300" height="370"><span class="auth-footnote">{% if android_mode %}DEINE ANDROID-APP FÜR DAS PIXEL{% else %}DEINE DESKTOP-APP FÜR PC &amp; LAPTOP{% endif %}</span></section>
 <section class="auth-form-area"><div class="auth-card setup-card"><p class="eyebrow">NUR BEIM ERSTEN START</p><h2>Mach es zu deinem.</h2><p>Lege deinen persönlichen Zugang an. Dein Passwort bleibt bei dir.</p>
 <form method="post" novalidate>{% csrf_token %}
 {% if form.errors %}<div class="form-error-summary" role="alert">Bitte prüfe deine Angaben.{{ form.non_field_errors }}</div>{% endif %}

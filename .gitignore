@@ -15,3 +15,12 @@ dist/
 build/
 *.haarvinci
 *.sqlite3
+android/.gradle/
+android/local.properties
+android/app/src/main/python/config/
+android/app/src/main/python/core/
+android/app/src/main/python/customers/
+android/app/src/main/python/desktop_app/
+android/app/src/main/assets/haarvinci/
+*.jks
+*.keystore

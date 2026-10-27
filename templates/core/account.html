@@ -40,7 +40,14 @@
                 <button class="button secondary" type="submit">{% icon 'logout' %}Sicher abmelden</button>
             </form>
         </section>
-        {% if desktop_mode %}
+        {% if android_mode %}
+        <section class="panel detail-panel">
+            <h2>{% icon 'download' %}Deine Daten auf dem Pixel</h2>
+            <p class="body-copy">Deine Kundenakten bleiben auf diesem Gerät. Sichere sie zusätzlich als Datei an einem getrennten Speicherort.</p>
+            <a class="button secondary" href="haarvinci://backup">{% icon 'download' %}Datensicherung erstellen</a>
+            <a class="button secondary" href="haarvinci://restore">{% icon 'shield' %}Sicherung wiederherstellen</a>
+        </section>
+        {% elif desktop_mode %}
         <section class="panel detail-panel">
             <h2>{% icon 'download' %}Deine Daten gut aufgehoben</h2>
             <p class="body-copy">Deine Kundenakten werden auf diesem Computer gespeichert. Über das Programmmenü „Datei → Datensicherung erstellen“ kannst du alle Daten auf einen USB-Stick oder anderen Datenträger sichern.</p>

@@ -111,6 +111,10 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+android = [
+    { name = "tzdata" },
+    { name = "waitress" },
+]
 desktop = [
     { name = "pyside6" },
     { name = "waitress" },
@@ -134,10 +138,12 @@ requires-dist = [
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" },
     { name = "pyside6", marker = "extra == 'desktop'", specifier = ">=6.8,<7" },
     { name = "python-dotenv", specifier = ">=1.1,<2" },
+    { name = "tzdata", marker = "extra == 'android'", specifier = ">=2026.5,<2027" },
+    { name = "waitress", marker = "extra == 'android'", specifier = ">=3,<4" },
     { name = "waitress", marker = "extra == 'desktop'", specifier = ">=3,<4" },
     { name = "whitenoise", specifier = ">=6.9,<7" },
 ]
-provides-extras = ["desktop"]
+provides-extras = ["android", "desktop"]
 
 [package.metadata.requires-dev]
 desktop-build = [{ name = "pyinstaller", specifier = ">=6.16,<7" }]

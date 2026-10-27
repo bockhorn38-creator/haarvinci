@@ -1,0 +1,105 @@
+name: Haarvinci Android-APK prüfen
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - 'config/**'
+      - 'customers/**'
+      - 'core/**'
+      - 'templates/**'
+      - 'static/**'
+      - 'desktop_app/storage.py'
+      - 'desktop_app/urls.py'
+      - 'desktop_app/views.py'
+      - 'tests/android_runtime_smoke.py'
+      - 'tests/test_android.py'
+      - '.github/workflows/android.yml'
+permissions:
+  contents: read
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Python-Kern vorbereiten und prüfen
+        run: |
+          set -euo pipefail
+          python -m pip install --require-hashes -r android/requirements.lock
+          python android/prepare_sources.py
+          python tests/android_runtime_smoke.py
+      - name: Android-SDK vorbereiten
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0' 'platform-tools'
+      - name: APK und Instrumentierung bauen
+        run: |
+          set -euo pipefail
+          mkdir -p test-results/android
+          android/gradlew -p android --no-daemon --max-workers=2 :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest 2>&1 | tee test-results/android/build.log
+      - name: Hardwarebeschleunigung für den Emulator freigeben
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          cores: 2
+          ram-size: 2048M
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot
+          script: |
+            set -euo pipefail
+            android/gradlew -p android --no-daemon --max-workers=2 :app:connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.class=de.haarvinci.app.AndroidWorkflowTest#a_fullWorkflow' 2>&1 | tee test-results/android/emulator.log
+            adb shell am force-stop de.haarvinci.app.preview
+            adb shell am instrument -w -e class 'de.haarvinci.app.AndroidWorkflowTest#b_persistenceAfterProcessRestart' de.haarvinci.app.preview.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee test-results/android/restart.log
+            test "$(rg -c 'OK \(1 test\)' test-results/android/restart.log)" -ge 1
+            if rg -q 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/restart.log; then exit 1; fi
+            adb pull /sdcard/Android/data/de.haarvinci.app.preview/files/test-results test-results/android/screenshots
+      - name: APK-Signatur und Paket prüfen
+        run: |
+          set -euo pipefail
+          mkdir -p dist/android
+          cp android/app/build/outputs/apk/debug/app-debug.apk dist/android/Haarvinci-Android-Test-0.3.0.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs dist/android/Haarvinci-Android-Test-0.3.0.apk > dist/android/SIGNATUR.txt
+          sha256sum dist/android/Haarvinci-Android-Test-0.3.0.apk > dist/android/SHA256SUMS.txt
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging dist/android/Haarvinci-Android-Test-0.3.0.apk > test-results/android/apk-info.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Haarvinci-Android-Test-APK
+          path: dist/android/*
+          retention-days: 30
+          compression-level: 0
+      - name: Fehlerdiagnose als Check-Hinweis ausgeben
+        if: failure()
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          paths = list(Path('test-results/android').glob('*.log')) + list(Path('android/app/build/outputs/androidTest-results').rglob('*.xml'))
+          for path in paths:
+              text = path.read_text(errors='replace')[-14000:]
+              text = text.replace('%','%25').replace('\r','%0D').replace('\n','%0A')
+              print(f'::error title=Android-Prüfung {path.name}::{text}')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Android-Pruefergebnisse
+          path: |
+            test-results/android
+            android/app/build/reports
+            android/app/build/outputs/androidTest-results
+          if-no-files-found: ignore

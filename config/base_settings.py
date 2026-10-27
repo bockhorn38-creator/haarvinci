@@ -1,7 +1,8 @@
+import os
 from datetime import timedelta
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(os.environ.get("HAARVINCI_RESOURCE_DIR", Path(__file__).resolve().parent.parent))
 
 INSTALLED_APPS = [
     "django.contrib.auth",

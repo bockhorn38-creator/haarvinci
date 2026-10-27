@@ -2389,3 +2389,6 @@ textarea:focus-visible,
 .setup-card .form-field + .form-field { margin-top: 14px; }
 .checkbox-label { display:flex; gap:10px; align-items:center; margin-top:20px; font-size:12px; color:var(--muted); cursor:pointer; min-height:44px; }
 .checkbox-label input { width:18px; height:18px; accent-color:var(--wine); }
+
+/* Native Android-Kopfzeile und Systemleisten werden von der App bereitgestellt. */
+.android-app .topbar { display: none; }

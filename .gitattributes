@@ -3,3 +3,5 @@
 *.png binary
 # Lizenztexte von Drittanbietern unverändert übernehmen.
 desktop/licenses/** -whitespace
+android/gradlew text eol=lf
+*.jar binary

@@ -202,8 +202,8 @@ public class AndroidWorkflowTest {
             waitFor(detail, "1 tatsächlich abgeschlossener Besuch");
             for (String mode : new String[]{"tag", "woche", "monat"}) {
                 open("/kalender/?ansicht=" + mode + "&datum=" + tomorrow);
-                waitFor("/kalender/", "Dein Kalender");
-                assertTrue(state().getString("text").contains("Mila"));
+                waitFor("/kalender/", "Mila");
+                assertTrue(js("location.search").contains("ansicht=" + mode));
                 screenshot("android-kalender-" + mode + ".png");
             }
             open("/kalender/google/");
@@ -350,7 +350,7 @@ public class AndroidWorkflowTest {
             waitFor(receipt, "Import bereits übernommen");
             open("/kundinnen/?q=Fiktivimport");
             waitFor("/kundinnen/", "1 Ergebnis");
-            scenario.onActivity(activity -> activity.onNewIntent(new android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain").putExtra(android.content.Intent.EXTRA_TEXT, "https://chatgpt.com/share/fiktiver-testlink")));
+            context.startActivity(new android.content.Intent(android.content.Intent.ACTION_SEND).setClass(context, MainActivity.class).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK).setType("text/plain").putExtra(android.content.Intent.EXTRA_TEXT, "https://chatgpt.com/share/fiktiver-testlink"));
             UiObject2 linkHint = device.wait(Until.findObject(By.textContains("Geteilt wurde nur ein Link")), 15000);
             assertNotNull("Link-Fallback fehlt", linkHint);
             device.findObject(By.res("android:id/button1")).click();
@@ -362,7 +362,7 @@ public class AndroidWorkflowTest {
             waitFor("/konto/", "Sicher abmelden");
             js("document.querySelector('form[action=\"/abmelden/\"]').requestSubmit();");
             waitFor("/anmelden/", "Kundenbuch öffnen");
-            scenario.onActivity(activity -> activity.onNewIntent(new android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain").putExtra(android.content.Intent.EXTRA_TEXT, payload)));
+            context.startActivity(new android.content.Intent(android.content.Intent.ACTION_SEND).setClass(context, MainActivity.class).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK).setType("text/plain").putExtra(android.content.Intent.EXTRA_TEXT, payload));
             waitFor("/anmelden/", "Kundenbuch öffnen");
             fill(new JSONObject().put("username", USER).put("password", PASSWORD));
             waitFor(receipt, "Import bereits übernommen");

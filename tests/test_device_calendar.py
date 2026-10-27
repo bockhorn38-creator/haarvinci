@@ -228,6 +228,16 @@ class DeviceCalendarTests(TestCase):
         self.assertEqual(self.item.sync_state, "local")
         self.assertEqual(len(self.provider.writes), 1)
 
+    def test_customer_rename_is_also_a_local_calendar_change(self):
+        binding = self.sync()
+        self.customer.first_name = "Nele"
+        self.customer.save()
+        self.provider.rows[binding.marker.hex]["event"]["title"] = "Unabhängiger Geräte-Titel"
+        self.provider.rows[binding.marker.hex]["revision"] = "r-neu"
+        self.sync()
+        self.assertEqual(self.item.sync_state, "conflict")
+        self.assertEqual(len(self.provider.writes), 1)
+
     def test_own_event_converted_to_all_day_is_not_silently_imported(self):
         binding = self.sync()
         self.provider.rows[binding.marker.hex]["event"]["all_day"] = True

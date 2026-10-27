@@ -159,7 +159,9 @@ def store_result(item, binding, state, response, pull=False):
         .get(pk=item.pk)
     )
     link = DeviceEventBinding.objects.select_for_update().get(pk=binding.pk)
-    if pull and current.version != item.version:
+    if pull and (
+        current.version != item.version or local_state(current, link) != local_state(item, binding)
+    ):
         conflict(current, response, state)
         return
     if pull:
@@ -268,7 +270,9 @@ def sync_item(item, binding, bridge, writable):
     if item.sync_state == "conflict" and item.remote_conflict.get("backend") == "device":
         conflict(item, response, remote)
         return response["id"]
-    local_changed = item.version != binding.last_version
+    local_changed = item.version != binding.last_version or (
+        bool(binding.baseline) and local != binding.baseline
+    )
     remote_changed = bool(binding.baseline) and remote != binding.baseline
     if (not binding.baseline and remote != local) or (
         local_changed and remote_changed and remote != local

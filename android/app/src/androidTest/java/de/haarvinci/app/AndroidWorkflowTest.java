@@ -317,6 +317,8 @@ public class AndroidWorkflowTest {
         assertNotNull("Teilen-Empfänger ist nicht registriert", context.getPackageManager().resolveActivity(implicit, 0));
         try (ActivityScenario<MainActivity> active = ActivityScenario.launch(share)) {
             scenario = active;
+            waitFor("/anmelden/", "Kundenbuch öffnen");
+            fill(new JSONObject().put("username", USER).put("password", PASSWORD));
             String draft = waitForText("Deine Importvorschau");
             assertTrue(draft.startsWith("/uebernehmen/vorschau/"));
             assertTrue(state().getString("text").contains("NOCH NICHT GESPEICHERT"));

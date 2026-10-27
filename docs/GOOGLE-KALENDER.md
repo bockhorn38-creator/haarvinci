@@ -1,3 +1,5 @@
+> Historischer OAuth-/REST-Prototyp aus 0.5.0. Für Android ab 0.5.1 ist keine Einrichtung nach dieser Anleitung nötig. Die aktive Verbindung verwendet [Android-Gerätekalender](ANDROID-GERAETEKALENDER.md).
+
 # Google Kalender verbinden – Vorbereitung für Haarvinci 0.5
 
 **Du kannst den lokalen Kalender sofort ohne diese Einrichtung verwenden.** Google ist optional. Die App zeigt eine fehlende Verbindung ausdrücklich an. Bis zur Auslieferung wurden API-Antworten, Fehlerfälle, OAuth-Übergabe und Konflikte automatisiert simuliert; eine echte Google-Anmeldung, echte Kalenderberechtigungen und ein echter Internet-Abgleich wurden mangels eigener Google-Konfiguration noch nicht geprüft.

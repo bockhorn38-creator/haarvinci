@@ -6,7 +6,9 @@ Connys persönliches Kundenbuch für Haarverlängerung und Haarverdichtung. Die 
 
 Haarvinci wird zusätzlich als eigenständige Android-Test-APK mit lokaler Datenbank gebaut. Installation, Sicherungen, Geräteübernahme und Grenzen der Testsignierung stehen in [docs/ANDROID.md](docs/ANDROID.md). Die APK wird im Workflow „Haarvinci Android-APK prüfen“ auf einem emulierten Pixel installiert und funktional geprüft.
 
-**[Android-Testversion 0.5.0 direkt als APK herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.5.0.apk)** (ca. 55 MB, kein ZIP).
+**[Android-Testversion 0.5.1 direkt als APK herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.5.1.apk)** (ca. 55 MB, kein ZIP).
+
+Neu in 0.5.1: [ChatGPT-Textimport mit Vorschau und Bestätigung](docs/CHATGPT-IMPORT.md) und [direkte Android-Gerätekalender](docs/ANDROID-GERAETEKALENDER.md). Keine zusätzliche Serverinfrastruktur, keine OpenAI-API und keine eigene Google-Cloud-Konfiguration nötig.
 
 ## Windows-Version für PC und Laptop
 

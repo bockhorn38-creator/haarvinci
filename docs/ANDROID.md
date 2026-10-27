@@ -2,7 +2,7 @@
 
 Die Android-Version öffnet sich als eigene App auf dem Pixel. Python, Django und die SQLite-Datenbank sind enthalten; ein externer Server oder eine Verbindung zur Windows-App ist für die Kundenverwaltung nicht erforderlich.
 
-## Die aktuelle Testversion 0.5.0
+## Die aktuelle Testversion 0.5.1
 
 Diese APK ist eine **Entwicklungs-/Testversion für ausschließlich fiktive Kundendaten**. Sie wird mit einem Android-Entwicklungsschlüssel signiert und als APK bereitgestellt, nicht über den Play Store veröffentlicht. Der Fingerabdruck des verwendeten Zertifikats und die SHA-256-Prüfsumme liegen dem Build bei. Für langfristige Updates und einen Produktivbetrieb wird später eine dauerhaft verwaltete Freigabesignierung benötigt. Verschiedene Testbuilds können unterschiedliche Signaturen haben.
 
@@ -12,20 +12,26 @@ Zielgeräte: Android ab Version 8 (API 26) mit 64-Bit-ARM-Prozessor, insbesonder
 
 ## Installieren und starten
 
-1. Die [geprüfte Android-Test-APK 0.5.0 direkt herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.5.0.apk) (einzelne APK, ca. 55 MB; kein ZIP, keine GitHub-Anmeldung erforderlich).
-2. Die heruntergeladene `Haarvinci-Android-Test-0.5.0.apk` auf dem Pixel öffnen. Android führt durch die Installation einer selbst heruntergeladenen App. Falls erforderlich, die Installation aus dieser Quelle für den verwendeten Browser erlauben. Nur die selbst bezogene, geprüfte Datei aus diesem Projekt verwenden.
+1. Die [geprüfte Android-Test-APK 0.5.1 direkt herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.5.1.apk) (einzelne APK, ca. 55 MB; kein ZIP, keine GitHub-Anmeldung erforderlich).
+2. Die heruntergeladene `Haarvinci-Android-Test-0.5.1.apk` auf dem Pixel öffnen. Android führt durch die Installation einer selbst heruntergeladenen App. Falls erforderlich, die Installation aus dieser Quelle für den verwendeten Browser erlauben. Nur die selbst bezogene, geprüfte Datei aus diesem Projekt verwenden.
 3. Haarvinci über das App-Symbol öffnen. Beim ersten Start deinen Vornamen, einen Benutzernamen und ein eigenes Passwort mit mindestens zwölf Zeichen festlegen.
 4. Zum Ausprobieren können sechs fiktive Testkundinnen angelegt werden. Die bisherigen Funktionen Anlegen, Suchen, Anzeigen, Bearbeiten und Export stehen in der App zur Verfügung.
 
-Die Kundenverwaltung arbeitet lokal und benötigt keine Internetverbindung. Die App speichert ihre Daten im privaten Android-Appordner, nicht im LocalStorage. Eine Anmeldung in Google oder Zugriff auf Kontakte, Fotos oder Standort wird nicht angefordert.
+Die Kundenverwaltung arbeitet lokal und benötigt keine Internetverbindung. Die App speichert ihre Daten im privaten Android-Appordner, nicht im LocalStorage. Kontakte, Fotos und Standort werden nicht angefordert. Für die optionale Kalenderverbindung werden die Android-Kalenderberechtigungen nach deiner ausdrücklichen Auswahl benötigt; die Google-Konten sind bereits im System eingerichtet.
 
-Die Datei liegt als einzelne APK im separaten [GitHub-Download-Zweig](https://github.com/bockhorn38-creator/haarvinci/tree/android-test-downloads) und unterliegt nicht der 30-Tage-Aufbewahrung der ursprünglichen Build-Artefakte. Sie wurde unverändert aus dem bereits erfolgreich geprüften Build übernommen, ohne zusätzlichen Bau oder neue Signierung. Prüfsumme und Zertifikatsinformationen stehen im Unterordner `0.5.0` daneben. Die GitHub-Actions-Integration hat das Anlegen eines Releases zuvor mit **HTTP 403: Resource not accessible by integration** verweigert; deshalb wird dieser direkte Datei-Download verwendet. Die Repository-Sichtbarkeit wurde nicht geändert. Die installierte App funktioniert unabhängig von der Verfügbarkeit des Downloads.
+Die Datei liegt als einzelne APK im separaten [GitHub-Download-Zweig](https://github.com/bockhorn38-creator/haarvinci/tree/android-test-downloads) und unterliegt nicht der 30-Tage-Aufbewahrung der ursprünglichen Build-Artefakte. Sie wurde unverändert aus dem bereits erfolgreich geprüften Build übernommen, ohne zusätzlichen Bau oder neue Signierung. Prüfsumme und Zertifikatsinformationen stehen im Unterordner `0.5.1` daneben. Die GitHub-Actions-Integration hat das Anlegen eines Releases zuvor mit **HTTP 403: Resource not accessible by integration** verweigert; deshalb wird dieser direkte Datei-Download verwendet. Die Repository-Sichtbarkeit wurde nicht geändert. Die installierte App funktioniert unabhängig von der Verfügbarkeit des Downloads.
 
 Vollständiger Download-Link zum Kopieren:
 
 ```text
-https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.5.0.apk
+https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.5.1.apk
 ```
+
+## Neu in 0.5.1: direkt vom Pixel übernehmen
+
+- **Aus ChatGPT einfügen:** Antworttext kopieren und im Drei-Punkte-Menü einfügen oder über Android an Haarvinci teilen. Die Vorschau erkennt Kundendaten, Haarprofile, Extensions und Termine gemeinsam. Fehlende Angaben ergänzen und vorhandene Kundinnen manuell auswählen. Erst **Jetzt verbindlich übernehmen** speichert. [Formatvorlage und Prompt](CHATGPT-IMPORT.md).
+- **Gerätekalender:** Im Kalender den entsprechenden Link öffnen und geschäftlichen sowie privaten Android-Kalender auswählen. Kein eigener Server, keine Domain oder Google-Cloud-Konfiguration erforderlich. Privat erscheinen nur Belegt-Zeiten. Änderungen an fremden Terminen sind gesperrt; unklare Zuordnungen oder beidseitige Änderungen verlangen eine Prüfung. [Einrichtung und Grenzen](ANDROID-GERAETEKALENDER.md).
+- Ohne OpenAI-API. Teilt ChatGPT nur einen Link, den vollständigen Antworttext kopieren und die Zwischenablage verwenden. Die konkrete ChatGPT-App und der Google-Kontosync bleiben Pixel-Prüfungen.
 
 ## Neu in 0.5.0: Kalender und Termine
 
@@ -38,7 +44,7 @@ https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-down
 
 Der lokale Kalender funktioniert vollständig ohne Google und ohne Internet. Einrichtungs- und Nutzungsdetails: [KALENDER.md](KALENDER.md).
 
-**Google ist optional und zunächst nicht verbunden.** Die technische Integration ist implementiert und mit simulierten API-Antworten geprüft; eine echte Verbindung erfordert die eigene Google-Cloud-Konfiguration und den optionalen eigenen HTTPS-Anmeldedienst. Bislang keine Abnahme mit einem echten Google-Konto. Anleitung: [GOOGLE-KALENDER.md](GOOGLE-KALENDER.md). Private Kalender liefern ausschließlich Belegt-Zeiten; Tokens bleiben verschlüsselt außerhalb der lokalen Kunden-Datenbank.
+**Google ist optional.** Ab 0.5.1 erfolgt die Verbindung über die bereits im Android-System eingerichteten Kalender. Android übernimmt den eigentlichen Google-Kontosync; ein Geräteabgleich ist keine Cloud-Bestätigung. Der bisherige OAuth-/Anmeldeserver-Prototyp ist nicht der aktive Android-Pfad. [Direkte Geräteverbindung](ANDROID-GERAETEKALENDER.md).
 
 ## Neu in 0.4.0
 
@@ -48,9 +54,9 @@ Der lokale Kalender funktioniert vollständig ohne Google und ohne Internet. Ein
 - Eigener Bereich **Extensions** in der unteren Navigation, Suche nach Kundin/Produkt und Filter nach Lieferstatus. Eigene vorhandene Angaben werden beim Erfassen vorgeschlagen.
 - Logo, Farben und bisherige Gestaltung bleiben erhalten. Keine Haarlagerverwaltung und keine neuen Sicherungsfunktionen.
 
-### Von 0.4.0 auf diese Testversion wechseln
+### Von einer älteren Testversion wechseln
 
-Der Versionscode wurde auf 3 erhöht. Die Signatur wurde mit 0.4.0 verglichen und unterscheidet sich: Für diese Testversion die alte App zuerst deinstallieren, dann die neue APK installieren. Dabei werden bisherige lokale Testdaten gelöscht. Das ist für diese Entwicklungsphase ausdrücklich akzeptiert. Beim ersten Start wieder einen eigenen Zugang und bei Bedarf sechs fiktive Kundinnen anlegen. Eine dauerhaft verwaltete Freigabesignierung folgt vor echtem Betrieb.
+Der Versionscode ist **4**. Die APK verwendet eine Testsignierung. Wenn Android ein Update wegen abweichender Signatur ablehnt, die alte Test-App deinstallieren und diese APK neu installieren. Dabei gehen lokale Testdaten verloren; dies ist für diese Entwicklungsphase ausdrücklich akzeptiert. Beim ersten Start wieder einen eigenen Zugang und bei Bedarf sechs fiktive Kundinnen anlegen. Wer die Daten behalten möchte, vorher eine `.haarvinci`-Sicherung an einem getrennten Ort erstellen. Keine echte Kundendaten in dieser Testversion verwenden.
 
 ### Die neuen Bereiche ausprobieren
 

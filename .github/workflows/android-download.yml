@@ -1,12 +1,12 @@
 name: Geprüfte APK als direkte Datei bereitstellen
 on:
   push:
-    tags: ['publish-android-apk-file-v0.5.0*']
+    tags: ['publish-android-apk-file-v0.5.1*']
 permissions:
   actions: read
   contents: write
 concurrency:
-  group: android-download-0.5.0
+  group: android-download-0.5.1
   cancel-in-progress: false
 jobs:
   download:
@@ -15,8 +15,8 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      SOURCE_SHA: 3d73d102634e7345d2f5d190e632df2f5a371f66
-      SOURCE_RUN: '40583235626'
+      SOURCE_SHA: dc14d9f137aea73a2f8146634018dfad51e8daab
+      SOURCE_RUN: '40604956787'
     steps:
       - name: Erfolgreich geprüften Build bestätigen
         run: |
@@ -34,7 +34,7 @@ jobs:
         with:
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
-          run-id: '40583235626'
+          run-id: '40604956787'
           name: Haarvinci-Android-Test-APK
           path: apk
       - name: Originale APK prüfen
@@ -44,7 +44,7 @@ jobs:
           import hashlib
           from pathlib import Path
           root = Path('apk')
-          apk = root / 'Haarvinci-Android-Test-0.5.0.apk'
+          apk = root / 'Haarvinci-Android-Test-0.5.1.apk'
           entries = (root / 'SHA256SUMS.txt').read_text().splitlines()
           assert len(entries) == 1
           expected, filename = entries[0].split(maxsplit=1)
@@ -52,10 +52,10 @@ jobs:
           assert hashlib.file_digest(apk.open('rb'), 'sha256').hexdigest() == expected
           (root / 'SHA256SUMS.txt').write_text(f'{expected}  {apk.name}\n')
           PY
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs apk/Haarvinci-Android-Test-0.5.0.apk > checked-signature.txt
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs apk/Haarvinci-Android-Test-0.5.1.apk > checked-signature.txt
           cmp apk/SIGNATUR.txt checked-signature.txt
-          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging apk/Haarvinci-Android-Test-0.5.0.apk > apk-info.txt
-          grep -q "package: name='de.haarvinci.app.preview' versionCode='3' versionName='0.5.0'" apk-info.txt
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging apk/Haarvinci-Android-Test-0.5.1.apk > apk-info.txt
+          grep -q "package: name='de.haarvinci.app.preview' versionCode='4' versionName='0.5.1'" apk-info.txt
       - uses: actions/checkout@v4
         with:
           path: distribution
@@ -66,33 +66,35 @@ jobs:
           exec > >(tee distribution.log) 2>&1
           cd distribution
           # Nur neue Versionsdateien ergänzen; vorhandene APKs/Prüfsummen erhalten.
-          test ! -e Haarvinci-Android-Test-0.5.0.apk
-          test ! -e 0.5.0
-          mkdir 0.5.0
-          cp ../apk/Haarvinci-Android-Test-0.5.0.apk .
-          cp ../apk/SHA256SUMS.txt ../apk/SIGNATUR.txt 0.5.0/
-          cat > 0.5.0/README.md <<'NOTES'
-          # Haarvinci Android-Testversion 0.5.0
+          test ! -e Haarvinci-Android-Test-0.5.1.apk
+          test ! -e 0.5.1
+          mkdir 0.5.1
+          cp ../apk/Haarvinci-Android-Test-0.5.1.apk .
+          cp ../apk/SHA256SUMS.txt ../apk/SIGNATUR.txt 0.5.1/
+          cat > 0.5.1/README.md <<'NOTES'
+          # Haarvinci Android-Testversion 0.5.1
 
-          Die einzelne APK in diesem Zweig wurde unverändert aus dem erfolgreichen Android-Emulatortest 40583235626 übernommen. SHA256SUMS.txt und SIGNATUR.txt dokumentieren die geprüfte Originaldatei.
+          Die einzelne APK in diesem Zweig wurde unverändert aus dem erfolgreichen Android-Emulatortest 40604956787 übernommen. SHA256SUMS.txt und SIGNATUR.txt dokumentieren die geprüfte Originaldatei.
 
-          Neu: Offline-Kalender mit Tag/Woche/Monat, kundenbezogene Termine, Puffer-/Überschneidungsprüfung, Besuchszählung und optionale Google-Anbindung. Echte Google-Konten benötigen die manuelle Einrichtung nach docs/GOOGLE-KALENDER.md im Hauptzweig; bisher nur simulierte Google-Antworten geprüft. Das bisherige Design bleibt erhalten.
+          Neu: Native Android-Gerätekalender über CalendarContract, getrennte geschäftliche/private Kalender und ChatGPT-Textimport per Android-Teilen oder Zwischenablage. Importvorschau mit Pflichtfeldprüfung, ausdrücklicher Bestätigung und atomarer Speicherung; keine Lagerverwaltung. Kein eigener Server, keine Domain, kein Google-Cloud-Projekt und keine OpenAI-API erforderlich. Kundinnen, Haarprofile, Extensions, Historie und lokaler Kalender bleiben nutzbar.
 
-          Testsignierung: die vorherige 0.4.0 gegebenenfalls deinstallieren und diese APK frisch installieren. Bisherige lokale Testdaten gehen dabei verloren. Ausschließlich fiktive Daten verwenden. Keine automatische Gerätesynchronisierung.
+          Dokumentation im Hauptzweig: docs/CHATGPT-IMPORT.md und docs/ANDROID-GERAETEKALENDER.md. Native Provider-Testdaten und Android-Textübergabe sind im Emulator geprüft. Echte Google-Kontosynchronisierung und die genaue Text-/Link-Übergabe der installierten ChatGPT-App müssen noch auf dem Pixel getestet werden.
+
+          Testsignierung: die vorherige Testversion bei abweichender Signatur deinstallieren und diese APK frisch installieren. Bisherige lokale Testdaten gehen dabei verloren. Ausschließlich fiktive Daten verwenden. Keine automatische Gerätesynchronisierung.
 
           Der separate Download-Zweig dient als Ersatz, weil die GitHub-Actions-Integration das Anlegen eines GitHub Releases mit HTTP 403 verweigert. Der Hauptzweig enthält ausschließlich Quellcode; die Repository-Sichtbarkeit wird nicht geändert.
           NOTES
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add Haarvinci-Android-Test-0.5.0.apk 0.5.0/
-          git commit -m 'Distribute verified Android test APK 0.5.0 without rebuilding'
+          git add Haarvinci-Android-Test-0.5.1.apk 0.5.1/
+          git commit -m 'Distribute verified Android test APK 0.5.1 without rebuilding'
           git push origin HEAD:refs/heads/android-test-downloads
           git rev-parse HEAD
       - name: Direkten Download ohne Anmeldung prüfen
         run: |
           set -euo pipefail
-          curl --fail --location --retry 3 --output downloaded.apk "https://github.com/$GH_REPO/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.5.0.apk"
-          cmp apk/Haarvinci-Android-Test-0.5.0.apk downloaded.apk
+          curl --fail --location --retry 3 --output downloaded.apk "https://github.com/$GH_REPO/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.5.1.apk"
+          cmp apk/Haarvinci-Android-Test-0.5.1.apk downloaded.apk
       - name: Fehler als Check-Hinweis ausgeben
         if: failure()
         run: |

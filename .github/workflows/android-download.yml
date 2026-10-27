@@ -54,6 +54,8 @@ jobs:
           PY
           "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs apk/Haarvinci-Android-Test-0.5.0.apk > checked-signature.txt
           cmp apk/SIGNATUR.txt checked-signature.txt
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging apk/Haarvinci-Android-Test-0.5.0.apk > apk-info.txt
+          grep -q "package: name='de.haarvinci.app.preview' versionCode='3' versionName='0.5.0'" apk-info.txt
       - uses: actions/checkout@v4
         with:
           path: distribution
@@ -72,7 +74,7 @@ jobs:
           cat > 0.5.0/README.md <<'NOTES'
           # Haarvinci Android-Testversion 0.5.0
 
-          Die einzelne APK in diesem Zweig wurde unverändert aus dem erfolgreichen Android-Emulatortest 40562980839 übernommen. SHA256SUMS.txt und SIGNATUR.txt dokumentieren die geprüfte Originaldatei.
+          Die einzelne APK in diesem Zweig wurde unverändert aus dem erfolgreichen Android-Emulatortest 40583235626 übernommen. SHA256SUMS.txt und SIGNATUR.txt dokumentieren die geprüfte Originaldatei.
 
           Neu: Offline-Kalender mit Tag/Woche/Monat, kundenbezogene Termine, Puffer-/Überschneidungsprüfung, Besuchszählung und optionale Google-Anbindung. Echte Google-Konten benötigen die manuelle Einrichtung nach docs/GOOGLE-KALENDER.md im Hauptzweig; bisher nur simulierte Google-Antworten geprüft. Das bisherige Design bleibt erhalten.
 

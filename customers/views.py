@@ -7,6 +7,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.views.decorators.http import require_GET, require_http_methods
 
 from .forms import HAIR_FIELDS, CustomerForm
@@ -45,6 +46,26 @@ def customer_detail(request, pk):
             "nav": "customers",
             "customer": customer,
             "positions": customer.extensions.all(),
+            "completed_visits": customer.appointments.filter(
+                status="completed", end_at__lte=timezone.now()
+            ).count(),
+            "next_appointment": customer.appointments.filter(
+                status__in=["planned", "confirmed"], end_at__gte=timezone.now()
+            )
+            .select_related("appointment_type")
+            .first(),
+            "last_appointment": customer.appointments.filter(
+                status="completed", end_at__lte=timezone.now()
+            )
+            .order_by("-end_at")
+            .first(),
+            "past_appointments": customer.appointments.filter(end_at__lt=timezone.now())
+            .exclude(status="cancelled")
+            .select_related("appointment_type")
+            .order_by("-start_at")[:10],
+            "cancelled_appointments": customer.appointments.filter(status="cancelled")
+            .select_related("appointment_type")
+            .order_by("-start_at")[:10],
             "history": Paginator(customer.events.all(), 12).get_page(request.GET.get("historie")),
         },
     )
@@ -135,6 +156,17 @@ def customer_export(request, pk):
                         "notes",
                     )
                 ),
+                "appointments": list(
+                    customer.appointments.values(
+                        "id",
+                        "appointment_type__name",
+                        "start_at",
+                        "end_at",
+                        "status",
+                        "buffer_minutes",
+                        "notes",
+                    )
+                ),
                 "history": list(
                     customer.events.values(
                         "id",
@@ -142,6 +174,7 @@ def customer_export(request, pk):
                         "occurred_on",
                         "recorded_at",
                         "extension_uuid",
+                        "appointment_uuid",
                         "summary",
                         "snapshot",
                         "changes",

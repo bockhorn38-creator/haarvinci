@@ -7,6 +7,9 @@ from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
 from .base_settings import *  # noqa: F403
+from .base_settings import INSTALLED_APPS
+
+INSTALLED_APPS = [*INSTALLED_APPS, "google_broker"]
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(BASE_DIR / ".env")

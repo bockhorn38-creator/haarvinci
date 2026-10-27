@@ -9,6 +9,7 @@ on:
       - 'config/**'
       - 'customers/**'
       - 'extensions/**'
+      - 'appointments/**'
       - 'core/**'
       - 'templates/**'
       - 'static/**'

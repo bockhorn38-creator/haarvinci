@@ -90,6 +90,9 @@ class CustomerEvent(models.Model):
     """Unveränderliche Momentaufnahme; UUID-Referenz bleibt nach Positionslöschung erhalten."""
 
     class Kind(models.TextChoices):
+        APPOINTMENT_CREATED = "appointment_created", "Termin vereinbart"
+        APPOINTMENT_UPDATED = "appointment_updated", "Termin geändert"
+        APPOINTMENT_CANCELLED = "appointment_cancelled", "Termin abgesagt"
         CREATED = "created", "Kundenakte angelegt"
         PROFILE = "profile", "Kundenakte aktualisiert"
         EXTENSION_CREATED = "extension_created", "Extensions zugeordnet"
@@ -103,6 +106,7 @@ class CustomerEvent(models.Model):
     occurred_on = models.DateField("Datum")
     recorded_at = models.DateTimeField(auto_now_add=True)
     extension_uuid = models.UUIDField(null=True, editable=False)
+    appointment_uuid = models.UUIDField(null=True, editable=False)
     summary = models.CharField(max_length=500)
     snapshot = models.JSONField(default=dict)
     changes = models.JSONField(default=list)

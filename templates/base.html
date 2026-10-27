@@ -17,7 +17,7 @@
         <link rel="stylesheet" href="{% static 'css/app.css' %}">
         <script src="{% static 'js/app.js' %}" defer></script>
     </head>
-    <body data-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}" class="{% if not user.is_authenticated %}auth-body{% endif %} {% if android_mode %}android-app{% endif %}">
+    <body data-google-enabled="{% if google_enabled %}true{% else %}false{% endif %}" data-authenticated="{% if user.is_authenticated %}true{% else %}false{% endif %}" class="{% if not user.is_authenticated %}auth-body{% endif %} {% if android_mode %}android-app{% endif %}">
         <a class="skip-link" href="#main">Zum Inhalt springen</a>
         {% if user.is_authenticated %}
             <aside class="sidebar" aria-label="Hauptnavigation">
@@ -34,7 +34,8 @@
                     <a href="{% url 'customers:list' %}"
                        class="nav-link {% if nav == 'customers' %}active{% endif %}"
                        {% if nav == 'customers' %}aria-current="page"{% endif %}>{% icon 'users' %}Kundinnen</a>
-                    <a href="{% url 'extensions:list' %}" class="nav-link {% if nav == 'extensions' %}active{% endif %}" {% if nav == 'extensions' %}aria-current="page"{% endif %}>{% icon 'spark' %}Extensions</a>
+                    <a href="{% url 'appointments:calendar' %}" class="nav-link {% if nav == 'calendar' %}active{% endif %}" {% if nav == 'calendar' %}aria-current="page"{% endif %}>{% icon 'calendar' %}Kalender</a>
+                <a href="{% url 'extensions:list' %}" class="nav-link {% if nav == 'extensions' %}active{% endif %}" {% if nav == 'extensions' %}aria-current="page"{% endif %}>{% icon 'spark' %}Extensions</a>
                 </nav>
                 <a class="sidebar-note" href="{% url 'customers:create' %}">{% icon 'heart' %}<span>Jede schöne Verbindung
                     <br>
@@ -80,7 +81,8 @@
                     <a href="{% url 'customers:list' %}"
                        class="{% if nav == 'customers' %}active{% endif %}"
                        {% if nav == 'customers' %}aria-current="page"{% endif %}>{% icon 'users' %}<span>Kundinnen</span></a>
-                    <a href="{% url 'extensions:list' %}" class="{% if nav == 'extensions' %}active{% endif %}" {% if nav == 'extensions' %}aria-current="page"{% endif %}>{% icon 'spark' %}<span>Extensions</span></a>
+                    <a href="{% url 'appointments:calendar' %}" class="nav-link {% if nav == 'calendar' %}active{% endif %}" {% if nav == 'calendar' %}aria-current="page"{% endif %}>{% icon 'calendar' %}Kalender</a>
+                <a href="{% url 'extensions:list' %}" class="{% if nav == 'extensions' %}active{% endif %}" {% if nav == 'extensions' %}aria-current="page"{% endif %}>{% icon 'spark' %}<span>Extensions</span></a>
                     <a href="{% url 'account' %}"
                        class="{% if nav == 'account' %}active{% endif %}"
                        {% if nav == 'account' %}aria-current="page"{% endif %}>{% icon 'user' %}<span>Konto</span></a>

@@ -29,12 +29,12 @@
 <details id="historie" class="panel detail-panel fold-card" {% if request.GET.historie %}open{% endif %}>
     <summary><h2>{% icon 'calendar' %}Kundenhistorie</h2><span>{{ history.paginator.count }} dokumentierte Ereignisse</span></summary>
     <p class="history-hint">Zuordnungen erscheinen unter ihrem Bestell- / Zuordnungsdatum. Änderungen und Löschungen unter dem Tag der Bearbeitung. Extensions-Positionen zählen nicht als Besuche.</p>
-    {% if customer.first_consultation %}<p class="history-hint">Erste Beratung: {{ customer.first_consultation|date:'d.m.Y' }}. Weitere Besuche werden mit dem späteren Behandlungsmodul erfasst.</p>{% endif %}
+    {% if customer.first_consultation %}<p class="history-hint">Erste Beratung: {{ customer.first_consultation|date:'d.m.Y' }}. Als Besuche zählen ausschließlich tatsächlich abgeschlossene Termine.</p>{% endif %}
     <ol class="timeline">
     {% for event in history %}
         <li>
             <time datetime="{{ event.occurred_on|date:'Y-m-d' }}">{{ event.occurred_on|date:'d. F Y' }}</time>
-            <h3>{{ event.get_kind_display }}</h3><p>{{ event.summary }}</p>
+            <h3>{{ event.get_kind_display }}</h3>{% if event.appointment_uuid %}<a class="small-link" href="{% url 'appointments:detail' event.appointment_uuid %}">Termin öffnen</a>{% endif %}<p>{{ event.summary }}</p>
             <small class="muted">Erfasst {{ event.recorded_at|date:'d.m.Y, H:i' }} Uhr</small>
             {% if event.changes %}
             <details class="event-details"><summary>Änderungen ansehen</summary>

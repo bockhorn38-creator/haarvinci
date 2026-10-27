@@ -14,6 +14,7 @@ INSTALLED_APPS = [
     "core",
     "customers",
     "extensions",
+    "appointments",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

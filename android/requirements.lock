@@ -1,5 +1,6 @@
 # Aus uv.lock erzeugt; nur plattformunabhängige Pakete.
 asgiref==3.13.0 --hash=sha256:f9596a2434512686473d50f96ff6207fbba49ae1a785dfac614df4aeb085674d
+certifi==2026.10.23 --hash=sha256:e9b54de76e530bb6cf0ccd036787103acb58fd42ba930ea8bf948ddbaa2f61d1
 django==5.2.18 --hash=sha256:92ed81d500be6408ecd704d7bd1366c534f30427bffcc63c5fefb129561aec7c
 django-axes==8.3.1 --hash=sha256:f7887582fd12713064f1602091ff6152752becae5e891a15bf802746cab0f51a
 sqlparse==0.6.0 --hash=sha256:b861c0288ce2fa56209a9a6412d2e066ac664b3873b89c26c9d8415e8e32996f

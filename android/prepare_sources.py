@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 ANDROID = ROOT / "android/app/src/main"
 PYTHON = ANDROID / "python"
-for package in ["config", "core", "customers", "extensions"]:
+for package in ["config", "core", "customers", "extensions", "appointments"]:
     destination = PYTHON / package
     if destination.exists():
         shutil.rmtree(destination)

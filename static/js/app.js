@@ -28,3 +28,21 @@ if (document.querySelector('link[rel="manifest"]') && "serviceWorker" in navigat
     // Die Anwendung bleibt auch ohne Installationsunterstützung voll bedienbar.
   });
 }
+const appointmentForm = document.querySelector('.appointment-form');
+if (appointmentForm) {
+  let durationTimer;
+  const fields = ['day', 'begin', 'finish', 'end_day'];
+  const refreshDuration = () => {
+    clearTimeout(durationTimer);
+    durationTimer = setTimeout(async () => {
+      const params = new URLSearchParams({datum: appointmentForm.elements.day.value, beginn: appointmentForm.elements.begin.value, ende: appointmentForm.elements.finish.value, enddatum: appointmentForm.elements.end_day.value});
+      try {
+        const response = await fetch(appointmentForm.dataset.durationUrl + '?' + params);
+        const data = await response.json();
+        document.getElementById('duration-preview').textContent = response.ok ? data.minutes + ' Minuten' : data.error;
+      } catch (_) { document.getElementById('duration-preview').textContent = 'Wird beim Speichern berechnet'; }
+    }, 200);
+  };
+  fields.forEach(name => appointmentForm.elements[name].addEventListener('input', refreshDuration));
+  refreshDuration();
+}

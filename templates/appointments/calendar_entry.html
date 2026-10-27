@@ -1,0 +1,5 @@
+{% load ui %}
+{% if entry.url %}<a href="{{ entry.url }}"{% else %}<div{% endif %} class="calendar-entry {{ entry.kind }} {% if entry.cancelled %}cancelled{% endif %}">
+<span class="entry-time">{{ entry.display_start|date:'H:i' }} – {% if entry.display_end|date:'H:i' == '00:00' %}24:00{% else %}{{ entry.display_end|date:'H:i' }}{% endif %}</span>
+<strong>{{ entry.title }}</strong><small>{% if entry.kind == 'free' %}Antippen und Termin planen{% else %}{{ entry.subtitle }}{% endif %}</small>{% if entry.status %}<span class="entry-status">{{ entry.status }}</span>{% endif %}
+{% if entry.url %}</a>{% else %}</div>{% endif %}

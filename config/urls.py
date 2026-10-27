@@ -27,6 +27,7 @@ urlpatterns = [
     ),
     path("kundinnen/", include("customers.urls")),
     path("extensions/", include("extensions.urls")),
+    path("kalender/", include("appointments.urls")),
     path("bereit/", views.health, name="health"),
     path("manifest.webmanifest", views.manifest, name="manifest"),
     path("sw.js", views.service_worker, name="service_worker"),

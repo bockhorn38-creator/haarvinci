@@ -15,7 +15,7 @@ os.environ['HAARVINCI_DESKTOP_SECRET'] = secrets.token_urlsafe(64)
 os.environ['HAARVINCI_DESKTOP_TOKEN'] = secrets.token_urlsafe(48)
 
 hidden = []
-for package in ['config', 'core', 'customers', 'extensions', 'desktop_app', 'axes', 'whitenoise']:
+for package in ['config', 'core', 'customers', 'extensions', 'appointments', 'desktop_app', 'axes', 'whitenoise']:
     hidden += collect_submodules(package)
 data = [(str(root / 'templates'), 'templates'),
         (str(root / 'static'), 'static'),
@@ -23,6 +23,7 @@ data = [(str(root / 'templates'), 'templates'),
         (str(root / 'desktop/THIRD_PARTY_NOTICES.md'), '.')]
 # Eigene Migrationen bleiben auch im eingefrorenen Programmpaket importierbar.
 data += collect_data_files('customers', include_py_files=True, includes=['migrations/*.py'])
+data += collect_data_files('appointments', include_py_files=True, includes=['migrations/*.py'])
 data += collect_data_files('extensions', include_py_files=True, includes=['migrations/*.py'])
 data += collect_data_files('axes', include_py_files=True, includes=['migrations/*.py'])
 

@@ -122,3 +122,15 @@ def restore(source):
         finally:
             _runtime.start()
         return json.dumps({"origin": _runtime.origin, "token": _runtime.token})
+
+
+def google_action(cookies, action, arguments, context):
+    from appointments.native import action as perform
+
+    return perform(cookies, action, arguments, context)
+
+
+def google_background(context):
+    from appointments.native import background
+
+    return background(context)

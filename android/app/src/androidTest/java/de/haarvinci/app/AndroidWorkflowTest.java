@@ -58,7 +58,16 @@ public class AndroidWorkflowTest {
         throw new AssertionError("Erwartete Seite " + path + " mit " + text + "; letzte Seite: " + current);
     }
     private void fill(JSONObject fields) throws Exception {
-        js("for(const [name,value] of Object.entries(" + fields + ")){document.querySelector('[name=\"'+name+'\"]').value=value;}document.querySelector('form').requestSubmit();");
+        js("for(const [name,value] of Object.entries(" + fields + ")){const input=document.querySelector('[name=\"'+name+'\"]');if(input.type==='checkbox')input.checked=(value==='on'||value==='true');else input.value=value;}document.querySelector('form').requestSubmit();");
+    }
+    private String waitForText(String text) throws Exception {
+        long deadline = System.currentTimeMillis() + 45000;
+        while (System.currentTimeMillis() < deadline) {
+            JSONObject current = state();
+            if (current.getString("text").contains(text)) return current.getString("path");
+            Thread.sleep(250);
+        }
+        throw new AssertionError("Erwarteter Text fehlt: " + text + "; letzte Seite: " + state());
     }
     private void open(String path) {
         scenario.onActivity(activity -> activity.appView().loadUrl(activity.appOrigin() + path));
@@ -157,6 +166,55 @@ public class AndroidWorkflowTest {
             assertTrue(state().getString("text").contains("Mila Testgarten"));
             screenshot("android-extensions-uebersicht.png");
 
+            String tomorrow = java.time.LocalDate.now(java.time.ZoneId.of("Europe/Berlin")).plusDays(1).toString();
+            String pastDay = java.time.LocalDate.now(java.time.ZoneId.of("Europe/Berlin")).minusDays(2).toString();
+            String customerId = detail.split("/")[2];
+            open("/kalender/neu/?kundin=" + customerId);
+            waitFor("/kalender/neu/", "Termin speichern");
+            String typeId = js("Array.from(document.querySelector('[name=appointment_type]').options).find(o=>o.value).value");
+            fill(new JSONObject().put("day", tomorrow).put("begin", "10:00").put("finish", "11:00").put("appointment_type", typeId).put("buffer_minutes", "15").put("status", "confirmed").put("notes", "Fiktiver Pixel-Termin vor der Sicherung."));
+            String appointment = waitForText("Bearbeiten / verschieben");
+            assertTrue(state().getString("text").contains("60 Minuten"));
+            open(appointment + "bearbeiten/");
+            waitFor(appointment + "bearbeiten/", "Termin speichern");
+            fill(new JSONObject().put("begin", "12:00").put("finish", "13:00"));
+            waitFor(appointment, "12:00");
+            open("/kalender/neu/?kundin=" + customerId);
+            waitFor("/kalender/neu/", "Termin speichern");
+            fill(new JSONObject().put("day", tomorrow).put("begin", "13:00").put("finish", "14:00").put("appointment_type", typeId).put("buffer_minutes", "0"));
+            waitFor("/kalender/neu/", "Zeit ist bereits belegt");
+            fill(new JSONObject().put("allow_overlap", "on"));
+            String cancelled = waitForText("Bearbeiten / verschieben");
+            open(cancelled + "absagen/");
+            waitFor(cancelled + "absagen/", "Termin verbindlich absagen");
+            fill(new JSONObject());
+            waitFor(cancelled, "Abgesagt");
+            open("/kalender/neu/?kundin=" + customerId);
+            waitFor("/kalender/neu/", "Termin speichern");
+            fill(new JSONObject().put("day", pastDay).put("begin", "09:00").put("finish", "10:00").put("appointment_type", typeId).put("buffer_minutes", "0").put("status", "completed"));
+            waitForText("Bearbeiten / verschieben");
+            open(detail);
+            waitFor(detail, "1 tatsächlich abgeschlossener Besuch");
+            for (String mode : new String[]{"tag", "woche", "monat"}) {
+                open("/kalender/?ansicht=" + mode + "&datum=" + tomorrow);
+                waitFor("/kalender/", "Dein Kalender");
+                assertTrue(state().getString("text").contains("Mila"));
+                screenshot("android-kalender-" + mode + ".png");
+            }
+            open("/kalender/google/");
+            waitFor("/kalender/google/", "Google ist noch nicht eingerichtet");
+            android.content.Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+            GoogleVault.save(context, "fiktive-testbindung", "fiktiver-native-zugangstoken");
+            assertEquals("fiktiver-native-zugangstoken", GoogleVault.load(context, "fiktive-testbindung"));
+            String encrypted = context.getSharedPreferences("google-vault", android.content.Context.MODE_PRIVATE).getString("fiktive-testbindung", "");
+            assertFalse(encrypted.contains("fiktiver-native-zugangstoken"));
+            context.getSharedPreferences("google-vault", android.content.Context.MODE_PRIVATE).edit().putString("fremde-testbindung", encrypted).commit();
+            boolean rejected = false;
+            try { GoogleVault.load(context, "fremde-testbindung"); } catch (Exception expected) { rejected = true; }
+            assertTrue("Tokenumschlag war nicht an die Kontobindung gebunden", rejected);
+            GoogleVault.remove(context, "fiktive-testbindung");
+            GoogleVault.remove(context, "fremde-testbindung");
+
             open("/konto/");
             waitFor("/konto/", "Deine Daten auf dem Pixel");
             menu("Datensicherung erstellen");
@@ -185,6 +243,10 @@ public class AndroidWorkflowTest {
             waitFor(positionEdit, "Extensions speichern");
             fill(new JSONObject().put("color", "Schwarz nach Sicherung"));
             waitFor(detail, "Schwarz nach Sicherung");
+            open(appointment + "bearbeiten/");
+            waitFor(appointment + "bearbeiten/", "Termin speichern");
+            fill(new JSONObject().put("begin", "15:00").put("finish", "16:00"));
+            waitFor(appointment, "15:00");
             menu("Sicherung wiederherstellen");
             UiObject2 backup = device.wait(Until.findObject(By.text("Haarvinci-Test-Sicherung.haarvinci")), 15000);
             assertNotNull("Gespeicherte Sicherung fehlt in der Android-Dateiauswahl", backup);
@@ -209,6 +271,11 @@ public class AndroidWorkflowTest {
             assertFalse(state().getString("text").contains("spätere Stand"));
             assertTrue(state().getString("text").contains("Kupfer"));
             assertFalse(state().getString("text").contains("Schwarz nach Sicherung"));
+            open(appointment);
+            waitFor(appointment, "12:00");
+            assertTrue(state().getString("text").contains("Fiktiver Pixel-Termin vor der Sicherung."));
+            open(detail);
+            waitFor(detail, "1 tatsächlich abgeschlossener Besuch");
             screenshot("android-kundenakte.png");
             open("/konto/");
             waitFor("/konto/", "Sicher abmelden");
@@ -230,6 +297,11 @@ public class AndroidWorkflowTest {
             waitFor("/extensions/", "1 Position");
             assertTrue(state().getString("text").contains("Kupfer"));
             assertTrue(state().getString("text").contains("149,90"));
+            String tomorrow = java.time.LocalDate.now(java.time.ZoneId.of("Europe/Berlin")).plusDays(1).toString();
+            open("/kalender/?ansicht=tag&datum=" + tomorrow);
+            waitFor("/kalender/", "Mila Testgarten");
+            assertTrue(state().getString("text").contains("12:00"));
+            assertTrue(state().getString("text").contains("Abgesagt"));
             screenshot("android-nach-neustart.png");
         }
     }

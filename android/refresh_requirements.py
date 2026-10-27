@@ -5,7 +5,16 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parent.parent
 packages = tomllib.loads((root / "uv.lock").read_text())["package"]
-names = {"django", "asgiref", "sqlparse", "django-axes", "whitenoise", "waitress", "tzdata"}
+names = {
+    "django",
+    "asgiref",
+    "sqlparse",
+    "django-axes",
+    "whitenoise",
+    "waitress",
+    "tzdata",
+    "certifi",
+}
 lines = ["# Aus uv.lock erzeugt; nur plattformunabhängige Pakete."]
 for package in packages:
     if package["name"] not in names:

@@ -48,6 +48,7 @@ public final class MainActivity extends Activity {
     private ProgressBar progress;
     private File pendingExport;
     private boolean authenticated;
+    private boolean googleEnabled;
     private boolean firstRun;
     private final Handler timer = new Handler(Looper.getMainLooper());
     volatile Uri lastExport;
@@ -148,6 +149,7 @@ public final class MainActivity extends Activity {
             if (OriginPolicy.isInternal(runtime.origin, url)) return false;
             if (request.hasGesture() && request.isForMainFrame() && OriginPolicy.isInternal(runtime.origin, view.getUrl())) {
                 if ("haarvinci".equals(request.getUrl().getScheme())) {
+                    if (request.getUrl().getHost() != null && request.getUrl().getHost().startsWith("google-") && authenticated) googleLink(request.getUrl());
                     if ("backup".equals(request.getUrl().getHost()) && authenticated) createBackup();
                     if ("restore".equals(request.getUrl().getHost()) && (authenticated || firstRun)) chooseRestore();
                 } else if ("tel".equals(request.getUrl().getScheme()) || "mailto".equals(request.getUrl().getScheme())) {
@@ -170,6 +172,10 @@ public final class MainActivity extends Activity {
                 authenticated = "true".equals(value) && OriginPolicy.isInternal(runtime.origin, url);
                 if (wasAuthenticated && !authenticated) web.clearHistory();
                 invalidateOptionsMenu();
+                view.evaluateJavascript("document.body && document.body.dataset.googleEnabled === 'true'", enabled -> {
+                    googleEnabled = "true".equals(enabled);
+                    if (authenticated && googleEnabled) GoogleSyncWorker.schedule(MainActivity.this);
+                });
             });
         }
     }
@@ -193,6 +199,71 @@ public final class MainActivity extends Activity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void googleLink(Uri uri) {
+        String host = uri.getHost();
+        String action = host.substring("google-".length());
+        if (!java.util.Arrays.asList("connect", "finish", "calendars", "sync", "disconnect", "resolve").contains(action)) return;
+        JSONObject arguments = new JSONObject();
+        try {
+            for (String key : uri.getQueryParameterNames()) arguments.put(key, uri.getQueryParameter(key));
+        } catch (Exception error) { showError("Die Google-Aktion ist ungültig."); return; }
+        if ("disconnect".equals(action) || "resolve".equals(action)) {
+            String message = "disconnect".equals(action)
+                ? "Die Verbindung wird auf diesem Gerät getrennt. Termine in Google werden nicht gelöscht."
+                : "Diesen Konflikt mit dem gewählten Stand auflösen? Bei Auswahl des lokalen Stands wird der eigene Haarvinci-Google-Termin aktualisiert oder bei Bedarf neu angelegt.";
+            new AlertDialog.Builder(this).setTitle("Bitte Entscheidung bestätigen").setMessage(message)
+                .setNegativeButton("Abbrechen", null).setPositiveButton("Bestätigen", (dialog, which) -> googleAction(action, arguments, false)).show();
+        } else googleAction(action, arguments, false);
+    }
+    private static String cookieValue(String cookies, String name) {
+        if (cookies == null) return "";
+        for (String item : cookies.split(";")) {
+            String value = item.trim();
+            if (value.startsWith(name + "=")) return value.substring(name.length() + 1);
+        }
+        return "";
+    }
+    private boolean googleBusy;
+    private void googleAction(String action, JSONObject arguments, boolean quiet) {
+        if (!authenticated || runtime == null || web == null || googleBusy) return;
+        googleBusy = true;
+        String cookies = CookieManager.getInstance().getCookie(runtime.origin);
+        String previousPage = web.getUrl();
+        application.worker.execute(() -> {
+            try {
+                JSONObject result = new JSONObject(application.call("google_action", cookies == null ? "" : cookies, action, arguments.toString(), getApplicationContext()).toString());
+                runOnUiThread(() -> {
+                    googleBusy = false;
+                    if (isFinishing() || isDestroyed() || !authenticated || web == null || !cookieValue(cookies, "haarvinci_desktop_session").equals(cookieValue(CookieManager.getInstance().getCookie(runtime.origin), "haarvinci_desktop_session"))) return;
+                    try {
+                        if (result.has("browser_url")) {
+                            Uri login = Uri.parse(result.getString("browser_url"));
+                            if (!"https".equals(login.getScheme()) || !"accounts.google.com".equals(login.getHost()) || login.getUserInfo() != null) throw new IllegalArgumentException();
+                            startActivity(new Intent(Intent.ACTION_VIEW, login).addCategory(Intent.CATEGORY_BROWSABLE));
+                        } else if (result.has("calendars")) {
+                            org.json.JSONArray calendars = result.getJSONArray("calendars");
+                            if (calendars.length() == 0) { showError("Kein geeigneter Kalender gefunden. Geschäftlich ist ein eigener Kalender erforderlich."); return; }
+                            String[] names = new String[calendars.length()];
+                            for (int i=0; i<names.length; i++) names[i] = calendars.getJSONObject(i).getString("title");
+                            new AlertDialog.Builder(this).setTitle("Google-Kalender auswählen").setItems(names, (dialog, index) -> {
+                                try { googleAction("choose", new JSONObject().put("role", result.getString("role")).put("calendar_id", calendars.getJSONObject(index).getString("id")), false); }
+                                catch (Exception error) { showError("Der Kalender konnte nicht ausgewählt werden."); }
+                            }).setNegativeButton("Abbrechen", null).show();
+                        } else {
+                            if (!quiet) Toast.makeText(this, result.optString("message", "Google-Verbindung geprüft."), Toast.LENGTH_LONG).show();
+                            if (!quiet && previousPage != null && previousPage.equals(web.getUrl()) && OriginPolicy.isInternal(runtime.origin, previousPage)) web.reload();
+                        }
+                        if (googleEnabled) GoogleSyncWorker.schedule(this);
+                    } catch (Exception error) { showError("Der sichere Anmeldeweg konnte nicht geöffnet werden. Bitte prüfe den Anmeldedienst und einen installierten Systembrowser."); }
+                });
+            } catch (Exception error) { runOnUiThread(() -> { googleBusy = false; if (!quiet) showError("Die Google-Aktion konnte nicht abgeschlossen werden."); }); }
+        });
+    }
+    @Override protected void onResume() {
+        super.onResume();
+        timer.postDelayed(() -> { if (authenticated && web != null) { googleAction("finish", new JSONObject(), true); if (googleEnabled) GoogleSyncWorker.schedule(this); } }, 700);
     }
 
     private void createBackup() {

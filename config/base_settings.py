@@ -81,6 +81,7 @@ X_FRAME_OPTIONS = "DENY"
 SECURE_REFERRER_POLICY = "same-origin"
 
 LANGUAGE_CODE = "de-de"
+LANGUAGES = [("de", "Deutsch")]
 TIME_ZONE = "Europe/Berlin"
 USE_I18N = True
 USE_TZ = True

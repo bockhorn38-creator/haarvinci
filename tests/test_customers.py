@@ -206,6 +206,13 @@ class CustomerWorkflowTests(TestCase):
         self.assertEqual(len(second.context["page"]), 3)
         self.assertEqual(first.context["page"].paginator.count, 15)
 
+    def test_account_forms_remain_german_on_an_english_device(self):
+        response = self.client.get(
+            reverse("password_change"), HTTP_ACCEPT_LANGUAGE="en-US,en;q=0.9"
+        )
+        self.assertContains(response, "Altes Passwort")
+        self.assertNotContains(response, "Old password")
+
     def test_password_change_invalidates_old_password(self):
         response = self.client.post(
             reverse("password_change"),

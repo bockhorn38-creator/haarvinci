@@ -147,9 +147,19 @@ public class AndroidWorkflowTest {
             UiObject2 backup = device.wait(Until.findObject(By.text("Haarvinci-Test-Sicherung.haarvinci")), 15000);
             assertNotNull("Gespeicherte Sicherung fehlt in der Android-Dateiauswahl", backup);
             backup.click();
-            UiObject2 confirm = device.wait(Until.findObject(By.text("Wiederherstellen")), 20000);
-            assertNotNull("Wiederherstellungsbestätigung fehlt", confirm);
-            assertNotNull(device.findObject(By.textContains("7 Kundenakten")));
+            UiObject2 confirm = device.wait(Until.findObject(By.res("android:id/button1")), 20000);
+            if (confirm == null) {
+                screenshot("android-restore-fehler.png");
+                java.io.ByteArrayOutputStream hierarchy = new java.io.ByteArrayOutputStream();
+                device.dumpWindowHierarchy(hierarchy);
+                throw new AssertionError("Wiederherstellungsbestätigung fehlt. UI: " + hierarchy.toString("UTF-8"));
+            }
+            if (device.findObject(By.textContains("7 Kundenakten")) == null) {
+                screenshot("android-restore-fehler.png");
+                java.io.ByteArrayOutputStream hierarchy = new java.io.ByteArrayOutputStream();
+                device.dumpWindowHierarchy(hierarchy);
+                throw new AssertionError("Sicherungsinhalt fehlt. UI: " + hierarchy.toString("UTF-8"));
+            }
             confirm.click();
             signIn();
             open(detail);

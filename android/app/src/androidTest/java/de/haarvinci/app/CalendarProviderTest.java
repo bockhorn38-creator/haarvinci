@@ -73,7 +73,7 @@ public class CalendarProviderTest {
     private JSONObject write(String cal, String fp, String marker, String id, String revision, String action, JSONObject data) throws Exception { return new JSONObject(CalendarProviderBridge.write(cal, fp, marker, id, revision, action, data.toString())); }
     private void python(HaarvinciApplication app, String script) throws Exception {
         CountDownLatch done = new CountDownLatch(1); AtomicReference<Throwable> failure = new AtomicReference<>();
-        app.worker.execute(() -> { try { Python.getInstance().getModule("builtins").callAttr("exec", script); } catch (Throwable error) { failure.set(error); } finally { done.countDown(); } });
+        app.worker.execute(() -> { try { com.chaquo.python.PyObject builtins = Python.getInstance().getModule("builtins"); builtins.callAttr("exec", script, builtins.callAttr("dict")); } catch (Throwable error) { failure.set(error); } finally { done.countDown(); } });
         assertTrue("Python-Prüfung läuft zu lange", done.await(90, TimeUnit.SECONDS));
         if (failure.get() != null) throw new AssertionError("Native Backend-Prüfung fehlgeschlagen", failure.get());
     }

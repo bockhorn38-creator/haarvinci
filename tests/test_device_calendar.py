@@ -251,6 +251,27 @@ class DeviceCalendarTests(TestCase):
             self.client.get(reverse("appointments:external", args=[event.pk])).status_code, 404
         )
 
+    def test_repeated_business_cache_refresh_preserves_detail_links(self):
+        from appointments.models import DeviceBusinessEvent
+
+        self.provider.blocks = [
+            {
+                "id": "17:100",
+                "title": "Fiktive Belegung",
+                "start": self.item.start_at.isoformat(),
+                "end": self.item.end_at.isoformat(),
+            }
+        ]
+        self.sync()
+        original = DeviceBusinessEvent.objects.get().pk
+        self.provider.blocks[0]["title"] = "Am Gerät geändert"
+        self.sync()
+        self.assertEqual(DeviceBusinessEvent.objects.get().pk, original)
+        self.assertEqual(DeviceBusinessEvent.objects.get().title, "Am Gerät geändert")
+        self.provider.blocks = []
+        self.sync()
+        self.assertFalse(DeviceBusinessEvent.objects.exists())
+
     def test_customer_rename_is_also_a_local_calendar_change(self):
         binding = self.sync()
         self.customer.first_name = "Nele"

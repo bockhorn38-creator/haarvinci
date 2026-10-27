@@ -363,7 +363,6 @@ def sync_all(bridge, user=None):
                             ]
                         )
                     else:
-                        DeviceBusinessEvent.objects.filter(connection=connection).delete()
                         unique = {row["id"]: (row, a, b) for row, a, b in intervals}
                         DeviceBusinessEvent.objects.bulk_create(
                             [
@@ -375,8 +374,14 @@ def sync_all(bridge, user=None):
                                     end_at=b,
                                 )
                                 for row, a, b in unique.values()
-                            ]
+                            ],
+                            update_conflicts=True,
+                            update_fields=["title", "start_at", "end_at"],
+                            unique_fields=["connection", "occurrence_key"],
                         )
+                        DeviceBusinessEvent.objects.filter(connection=connection).exclude(
+                            occurrence_key__in=[str(key)[:100] for key in unique]
+                        ).delete()
                 connection.state = "connected"
                 connection.error_code = (
                     "conflict"

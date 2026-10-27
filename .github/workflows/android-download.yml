@@ -1,0 +1,104 @@
+name: Geprüfte APK als direkte Datei bereitstellen
+on:
+  push:
+    tags: ['publish-android-apk-file-v0.4.0*']
+permissions:
+  actions: read
+  contents: write
+concurrency:
+  group: android-download-0.4.0
+  cancel-in-progress: false
+jobs:
+  download:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE_SHA: 711b6c9e6d570efef7097ae90778444163928076
+      SOURCE_RUN: '40562980839'
+    steps:
+      - name: Erfolgreich geprüften Build bestätigen
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/actions/runs/$SOURCE_RUN" > source-run.json
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          run = json.loads(Path('source-run.json').read_text())
+          assert run['status'] == 'completed' and run['conclusion'] == 'success'
+          assert run['head_sha'] == os.environ['SOURCE_SHA']
+          assert run['path'] == '.github/workflows/android.yml'
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: '40562980839'
+          name: Haarvinci-Android-Test-APK
+          path: apk
+      - name: Originale APK prüfen
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          root = Path('apk')
+          apk = root / 'Haarvinci-Android-Test-0.4.0.apk'
+          entries = (root / 'SHA256SUMS.txt').read_text().splitlines()
+          assert len(entries) == 1
+          expected, filename = entries[0].split(maxsplit=1)
+          assert Path(filename.strip().lstrip('*')).name == apk.name
+          assert hashlib.file_digest(apk.open('rb'), 'sha256').hexdigest() == expected
+          (root / 'SHA256SUMS.txt').write_text(f'{expected}  {apk.name}\n')
+          PY
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs apk/Haarvinci-Android-Test-0.4.0.apk > checked-signature.txt
+          cmp apk/SIGNATUR.txt checked-signature.txt
+      - uses: actions/checkout@v4
+        with:
+          path: distribution
+      - name: Separaten Download-Zweig ohne Änderung der Sichtbarkeit anlegen
+        run: |
+          set -euo pipefail
+          exec > >(tee distribution.log) 2>&1
+          cd distribution
+          # Keine Daten im Hauptzweig und keinen bestehenden Download-Zweig ersetzen.
+          if git ls-remote --exit-code --heads origin android-test-downloads; then
+            echo 'Der Download-Zweig existiert bereits; er wird nicht überschrieben.'
+            exit 1
+          fi
+          git checkout --orphan android-test-downloads
+          git rm -rf -- .
+          cp ../apk/* .
+          cat > README.md <<'NOTES'
+          # Haarvinci Android-Testversion 0.4.0
+
+          Die einzelne APK in diesem Zweig wurde unverändert aus dem erfolgreichen Android-Emulatortest 40562980839 übernommen. SHA256SUMS.txt und SIGNATUR.txt dokumentieren die geprüfte Originaldatei.
+
+          Neu: Haarprofile, kundenbezogene Extensions mit Anlegen/Bearbeiten/Löschen, chronologische Historie, Suche und Lieferstatus. Das bisherige Design bleibt erhalten.
+
+          Testsignierung: die vorherige 0.3.0 gegebenenfalls deinstallieren und diese APK frisch installieren. Bisherige lokale Testdaten gehen dabei verloren. Ausschließlich fiktive Daten verwenden. Keine automatische Gerätesynchronisierung.
+
+          Der separate Download-Zweig dient als Ersatz, weil die GitHub-Actions-Integration das Anlegen eines GitHub Releases mit HTTP 403 verweigert. Der Hauptzweig enthält ausschließlich Quellcode; die Repository-Sichtbarkeit wird nicht geändert.
+          NOTES
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Haarvinci-Android-Test-0.4.0.apk SHA256SUMS.txt SIGNATUR.txt README.md
+          git commit -m 'Distribute verified Android test APK 0.4.0 without rebuilding'
+          git push origin HEAD:refs/heads/android-test-downloads
+          git rev-parse HEAD
+      - name: Direkten Download ohne Anmeldung prüfen
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --output downloaded.apk "https://github.com/$GH_REPO/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.4.0.apk"
+          cmp apk/Haarvinci-Android-Test-0.4.0.apk downloaded.apk
+      - name: Fehler als Check-Hinweis ausgeben
+        if: failure()
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('distribution.log')
+          if path.exists():
+              text = path.read_text(errors='replace')[-10000:]
+              print('::error title=APK-Dateiveröffentlichung::' + text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A'))
+          PY

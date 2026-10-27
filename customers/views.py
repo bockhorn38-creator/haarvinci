@@ -9,9 +9,9 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_GET, require_http_methods
 
-from .forms import CustomerForm
+from .forms import HAIR_FIELDS, CustomerForm
 from .models import Customer
-from .services import EditConflict, update_customer
+from .services import EditConflict, create_customer, update_customer
 
 
 @login_required
@@ -38,7 +38,16 @@ def customer_list(request):
 @require_GET
 def customer_detail(request, pk):
     customer = get_object_or_404(Customer.objects.for_user(request.user), pk=pk)
-    return render(request, "customers/detail.html", {"nav": "customers", "customer": customer})
+    return render(
+        request,
+        "customers/detail.html",
+        {
+            "nav": "customers",
+            "customer": customer,
+            "positions": customer.extensions.all(),
+            "history": Paginator(customer.events.all(), 12).get_page(request.GET.get("historie")),
+        },
+    )
 
 
 @login_required
@@ -46,9 +55,7 @@ def customer_detail(request, pk):
 def customer_create(request):
     form = CustomerForm(request.POST if request.method == "POST" else None)
     if request.method == "POST" and form.is_valid():
-        customer = form.save(commit=False)
-        customer.owner = request.user
-        customer.save()
+        customer = create_customer(user=request.user, cleaned_data=form.cleaned_data)
         messages.success(request, f"Die Kundenakte für {customer} wurde angelegt.")
         return redirect("customers:detail", pk=customer.pk)
     return render(
@@ -102,11 +109,48 @@ def customer_export(request, pk):
         "notes",
         "created_at",
         "updated_at",
+        *HAIR_FIELDS,
     ]
     data = {field: getattr(customer, field) for field in fields}
     response = HttpResponse(
         json.dumps(
-            {"format_version": 1, "customer": data}, ensure_ascii=False, indent=2, default=str
+            {
+                "format_version": 1,
+                "customer": data,
+                "extensions": list(
+                    customer.extensions.values(
+                        "id",
+                        "manufacturer",
+                        "extension_type",
+                        "color",
+                        "color_code",
+                        "length_cm",
+                        "weight_g",
+                        "quantity",
+                        "quantity_unit",
+                        "purchase_price",
+                        "sale_price",
+                        "assigned_on",
+                        "delivery_status",
+                        "notes",
+                    )
+                ),
+                "history": list(
+                    customer.events.values(
+                        "id",
+                        "kind",
+                        "occurred_on",
+                        "recorded_at",
+                        "extension_uuid",
+                        "summary",
+                        "snapshot",
+                        "changes",
+                    )
+                ),
+            },
+            ensure_ascii=False,
+            indent=2,
+            default=str,
         ),
         content_type="application/json; charset=utf-8",
     )

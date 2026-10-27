@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Extensions-Position löschen{% endblock %}
+{% block content %}
+<a class="back-link" href="{% url 'customers:detail' customer.pk %}#extensions">{% icon 'back' %}Zurück zur Kundenakte</a>
+<div class="page-heading"><div><p class="eyebrow">BITTE KURZ PRÜFEN</p><h1>Diese Position löschen?</h1><p>Zuordnung zu {{ customer }}.</p></div></div>
+<section class="panel detail-panel delete-panel"><h2>{{ position.manufacturer }}</h2><p>{{ position.extension_type }} · {{ position.color }} · {{ position.length_cm }} cm · {{ position.weight_g }} g</p><p>Einkaufspreis gesamt: {{ position.purchase_price|floatformat:2 }} €</p><p>Die Position wird aus den aktuellen Extensions entfernt. Ihre Daten sowie die Löschung bleiben in der Kundenhistorie nachvollziehbar.</p>
+<form method="post" novalidate>{% csrf_token %}{{ form.version }}{% include 'customers/form_errors.html' %}<div class="position-actions"><a class="button secondary" href="{% url 'customers:detail' customer.pk %}#extensions">Abbrechen</a><button class="button primary" type="submit">Position endgültig löschen</button></div></form></section>
+{% endblock %}

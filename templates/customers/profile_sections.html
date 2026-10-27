@@ -1,0 +1,55 @@
+{% load ui %}
+<details class="panel detail-panel fold-card" id="haarprofil" open>
+    <summary><h2>{% icon 'spark' %}Haarprofil</h2><span>Ihr Haar. Ihr Wunschlook.</span></summary>
+    <dl class="detail-grid">
+        <div><dt>Naturhaarfarbe</dt><dd>{{ customer.natural_color|default:'Noch nicht hinterlegt' }}</dd></div>
+        <div><dt>Aktuelle Haarfarbe</dt><dd>{{ customer.current_color|default:'Noch nicht hinterlegt' }}</dd></div>
+        <div><dt>Haarstruktur</dt><dd>{{ customer.hair_structure|default:'Noch nicht hinterlegt' }}</dd></div>
+        <div><dt>Haarstärke / Haardichte</dt><dd>{{ customer.hair_density|default:'Noch nicht hinterlegt' }}</dd></div>
+        <div><dt>Eigenhaarlänge</dt><dd>{% if customer.natural_length is not None %}{{ customer.natural_length }} cm{% else %}Noch nicht hinterlegt{% endif %}</dd></div>
+        <div><dt>Gewünschte Haarlänge</dt><dd>{% if customer.desired_length is not None %}{{ customer.desired_length }} cm{% else %}Noch nicht hinterlegt{% endif %}</dd></div>
+        <div class="full-width"><dt>Aktuell getragene Extensions</dt><dd>{{ customer.current_extensions|default:'Noch nicht hinterlegt'|linebreaksbr }}</dd></div>
+        <div class="full-width"><dt>Besonderheiten und Wünsche</dt><dd>{{ customer.hair_wishes|default:'Noch nicht hinterlegt'|linebreaksbr }}</dd></div>
+    </dl>
+    <a class="small-link" href="{% url 'customers:edit' customer.pk %}#haarprofil">Haarprofil bearbeiten {% icon 'edit' %}</a>
+</details>
+<section id="extensions" class="customer-extensions">
+    <div class="section-heading">
+        <div><h2>Ihre Extensions</h2><p>Kundenbezogene Positionen und ihre Details.</p></div>
+        <a class="button primary" href="{% url 'customers:extension_create' customer.pk %}">{% icon 'plus' %}Extensions hinzufügen</a>
+    </div>
+    <div class="position-stack">
+    {% for position in positions %}
+        {% include 'extensions/card.html' %}
+    {% empty %}
+        <div class="panel compact-empty"><p>Noch keine Extensions zugeordnet.</p><span class="muted">Hersteller, Farbe und Länge finden hier ihren Platz.</span></div>
+    {% endfor %}
+    </div>
+</section>
+<details id="historie" class="panel detail-panel fold-card" {% if request.GET.historie %}open{% endif %}>
+    <summary><h2>{% icon 'calendar' %}Kundenhistorie</h2><span>{{ history.paginator.count }} dokumentierte Ereignisse</span></summary>
+    <p class="history-hint">Zuordnungen erscheinen unter ihrem Bestell- / Zuordnungsdatum. Änderungen und Löschungen unter dem Tag der Bearbeitung. Extensions-Positionen zählen nicht als Besuche.</p>
+    {% if customer.first_consultation %}<p class="history-hint">Erste Beratung: {{ customer.first_consultation|date:'d.m.Y' }}. Weitere Besuche werden mit dem späteren Behandlungsmodul erfasst.</p>{% endif %}
+    <ol class="timeline">
+    {% for event in history %}
+        <li>
+            <time datetime="{{ event.occurred_on|date:'Y-m-d' }}">{{ event.occurred_on|date:'d. F Y' }}</time>
+            <h3>{{ event.get_kind_display }}</h3><p>{{ event.summary }}</p>
+            <small class="muted">Erfasst {{ event.recorded_at|date:'d.m.Y, H:i' }} Uhr</small>
+            {% if event.changes %}
+            <details class="event-details"><summary>Änderungen ansehen</summary>
+                <dl class="change-list">{% for change in event.changes %}<div><dt>{{ change.label }}</dt><dd><span class="muted">Vorher:</span> {{ change.before|default:'Nicht hinterlegt'|linebreaksbr }}<br><span class="muted">Danach:</span> {{ change.after|default:'Nicht hinterlegt'|linebreaksbr }}</dd></div>{% endfor %}</dl>
+            </details>
+            {% endif %}
+            {% if event.extension_uuid %}
+            <details class="event-details"><summary>Gespeicherten Positionsstand ansehen</summary>
+                <dl class="detail-grid snapshot-grid">
+                    {% for row in event.snapshot_rows %}<div><dt>{{ row.label }}</dt><dd>{{ row.value|default:'Nicht hinterlegt'|linebreaksbr }}</dd></div>{% endfor %}
+                </dl>
+            </details>
+            {% endif %}
+        </li>
+    {% empty %}<li><p>Ab jetzt werden Änderungen und neue Extensions hier dokumentiert. Frühere Änderungen wurden noch nicht protokolliert.</p></li>{% endfor %}
+    </ol>
+    {% if history.has_other_pages %}<nav class="pagination" aria-label="Historienseiten">{% if history.has_previous %}<a class="button secondary" href="?historie={{ history.previous_page_number }}#historie">Zurück</a>{% endif %}<span>Seite {{ history.number }} von {{ history.paginator.num_pages }}</span>{% if history.has_next %}<a class="button secondary" href="?historie={{ history.next_page_number }}#historie">Weiter</a>{% endif %}</nav>{% endif %}
+</details>

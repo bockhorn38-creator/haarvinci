@@ -98,7 +98,7 @@ public class AndroidWorkflowTest {
             screenshot("android-uebersicht.png");
             open("/kundinnen/neu/");
             waitFor("/kundinnen/neu/", "Kundin speichern");
-            fill(new JSONObject().put("first_name", "Mila").put("last_name", "Testgarten").put("phone", "+49 151 0000 0199").put("email", "mila.android@example.com").put("first_consultation", "2026-10-01").put("notes", "Fiktive Android-Testkundin."));
+            fill(new JSONObject().put("first_name", "Mila").put("last_name", "Testgarten").put("phone", "+49 151 0000 0199").put("email", "mila.android@example.com").put("first_consultation", "2026-10-01").put("notes", "Fiktive Android-Testkundin.").put("natural_color", "Dunkelblond").put("hair_structure", "Wellig").put("natural_length", "25,5").put("desired_length", "50").put("hair_wishes", "Natürliche Fülle"));
             String detail = "";
             long deadline = System.currentTimeMillis() + 30000;
             while (System.currentTimeMillis() < deadline) {
@@ -118,6 +118,44 @@ public class AndroidWorkflowTest {
             assertTrue(state().getString("text").contains("Mila Testgarten"));
             assertFalse(state().getString("text").contains("Marie Sommer"));
             screenshot("android-kundinnen.png");
+
+            open(detail);
+            waitFor(detail, "Natürliche Fülle");
+            assertTrue(state().getString("text").contains("25,5 cm"));
+            screenshot("android-haarprofil.png");
+            open(detail + "extensions/neu/");
+            waitFor(detail + "extensions/neu/", "Extensions zuordnen");
+            fill(new JSONObject().put("manufacturer", "Fiktivhaar Atelier").put("extension_type", "Tape-Ins").put("color", "Naturblond").put("color_code", "#18/22").put("length_cm", "50,5").put("weight_g", "100,25").put("quantity", "4").put("quantity_unit", "packs").put("purchase_price", "149,90").put("sale_price", "249,95").put("assigned_on", "2026-10-01").put("delivery_status", "ordered").put("notes", "Erfundene Extensions auf Android."));
+            waitFor(detail, "Fiktivhaar Atelier");
+            String position = js("document.querySelector('[data-position]').dataset.position");
+            String positionEdit = detail + "extensions/" + position + "/bearbeiten/";
+            open(positionEdit);
+            waitFor(positionEdit, "Extensions speichern");
+            fill(new JSONObject().put("weight_g", "-1"));
+            waitFor(positionEdit, "Bitte prüfe deine Angaben.");
+            fill(new JSONObject().put("weight_g", "100,25").put("color", "Kupfer").put("delivery_status", "received"));
+            waitFor(detail, "Kupfer");
+            screenshot("android-extensions-kundenakte.png");
+            open(detail + "extensions/neu/");
+            waitFor(detail + "extensions/neu/", "Extensions zuordnen");
+            fill(new JSONObject().put("manufacturer", "Zweites Fiktivatelier").put("extension_type", "Bondings").put("color", "Braun").put("length_cm", "40").put("weight_g", "50").put("purchase_price", "75,20").put("assigned_on", "2026-10-02"));
+            waitFor(detail, "Zweites Fiktivatelier");
+            String secondPosition = js("document.querySelector('[data-position]').dataset.position");
+            assertNotEquals(position, secondPosition);
+            String deletePath = detail + "extensions/" + secondPosition + "/loeschen/";
+            open(deletePath);
+            waitFor(deletePath, "Position endgültig löschen");
+            fill(new JSONObject());
+            waitFor(detail, "wurde gelöscht");
+            js("document.querySelector('#historie').open=true;");
+            assertTrue(state().getString("text").contains("Extensions gelöscht"));
+            assertTrue(state().getString("text").contains("Extensions geändert"));
+            screenshot("android-kundenhistorie.png");
+            open("/extensions/?q=MILA&status=received");
+            waitFor("/extensions/", "1 Position");
+            assertTrue(state().getString("text").contains("149,90"));
+            assertTrue(state().getString("text").contains("Mila Testgarten"));
+            screenshot("android-extensions-uebersicht.png");
 
             open("/konto/");
             waitFor("/konto/", "Deine Daten auf dem Pixel");
@@ -143,6 +181,10 @@ public class AndroidWorkflowTest {
             waitFor(detail + "bearbeiten/", "Änderungen speichern");
             fill(new JSONObject().put("notes", "Dieser spätere Stand soll durch die Sicherung ersetzt werden."));
             waitFor(detail, "spätere Stand");
+            open(positionEdit);
+            waitFor(positionEdit, "Extensions speichern");
+            fill(new JSONObject().put("color", "Schwarz nach Sicherung"));
+            waitFor(detail, "Schwarz nach Sicherung");
             menu("Sicherung wiederherstellen");
             UiObject2 backup = device.wait(Until.findObject(By.text("Haarvinci-Test-Sicherung.haarvinci")), 15000);
             assertNotNull("Gespeicherte Sicherung fehlt in der Android-Dateiauswahl", backup);
@@ -165,6 +207,8 @@ public class AndroidWorkflowTest {
             open(detail);
             waitFor(detail, "vor der Sicherung gespeichert");
             assertFalse(state().getString("text").contains("spätere Stand"));
+            assertTrue(state().getString("text").contains("Kupfer"));
+            assertFalse(state().getString("text").contains("Schwarz nach Sicherung"));
             screenshot("android-kundenakte.png");
             open("/konto/");
             waitFor("/konto/", "Sicher abmelden");
@@ -182,6 +226,10 @@ public class AndroidWorkflowTest {
             open("/kundinnen/?q=Mila+Testgarten");
             waitFor("/kundinnen/", "1 Ergebnis");
             assertTrue(state().getString("text").contains("Mila Testgarten"));
+            open("/extensions/?q=Mila+Testgarten");
+            waitFor("/extensions/", "1 Position");
+            assertTrue(state().getString("text").contains("Kupfer"));
+            assertTrue(state().getString("text").contains("149,90"));
             screenshot("android-nach-neustart.png");
         }
     }

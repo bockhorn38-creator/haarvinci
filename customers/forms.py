@@ -5,24 +5,37 @@ from django.utils import timezone
 
 from .models import Customer
 
+HAIR_FIELDS = [
+    "natural_color",
+    "current_color",
+    "hair_structure",
+    "natural_length",
+    "desired_length",
+    "hair_density",
+    "current_extensions",
+    "hair_wishes",
+]
+CUSTOMER_FIELDS = [
+    "first_name",
+    "last_name",
+    "phone",
+    "email",
+    "street",
+    "postal_code",
+    "city",
+    "birthday",
+    "first_consultation",
+    "notes",
+    *HAIR_FIELDS,
+]
+
 
 class CustomerForm(forms.ModelForm):
     version = forms.IntegerField(widget=forms.HiddenInput, required=False)
 
     class Meta:
         model = Customer
-        fields = [
-            "first_name",
-            "last_name",
-            "phone",
-            "email",
-            "street",
-            "postal_code",
-            "city",
-            "birthday",
-            "first_consultation",
-            "notes",
-        ]
+        fields = CUSTOMER_FIELDS
         widgets = {
             "first_name": forms.TextInput(
                 attrs={"autocomplete": "given-name", "placeholder": "z. B. Marie"}
@@ -44,6 +57,11 @@ class CustomerForm(forms.ModelForm):
             "notes": forms.Textarea(
                 attrs={"rows": 5, "placeholder": "Was möchtest du dir für diese Kundin merken?"}
             ),
+            "hair_structure": forms.TextInput(
+                attrs={"list": "hair-structures", "placeholder": "z. B. wellig"}
+            ),
+            "current_extensions": forms.Textarea(attrs={"rows": 3}),
+            "hair_wishes": forms.Textarea(attrs={"rows": 3}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -55,6 +73,14 @@ class CustomerForm(forms.ModelForm):
             field.widget.attrs["aria-describedby"] = f"{name}-help {name}-errors"
         self.fields["birthday"].input_formats = ["%Y-%m-%d", "%d.%m.%Y"]
         self.fields["first_consultation"].input_formats = ["%Y-%m-%d", "%d.%m.%Y"]
+        for name in ["natural_length", "desired_length"]:
+            self.fields[name].localize = True
+            self.fields[name].widget = forms.TextInput(attrs={"inputmode": "decimal"})
+        self.fields[
+            "current_extensions"
+        ].help_text = (
+            "Derzeit getragener Look. Eine neue Zuordnung ändert diesen Text nicht automatisch."
+        )
 
     def clean(self):
         data = super().clean()

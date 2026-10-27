@@ -1,0 +1,11 @@
+<div class="form-grid">
+    {% include 'customers/field.html' with field=form.natural_color %}
+    {% include 'customers/field.html' with field=form.current_color %}
+    {% include 'customers/field.html' with field=form.hair_structure %}
+    {% include 'customers/field.html' with field=form.hair_density %}
+    {% include 'customers/field.html' with field=form.natural_length %}
+    {% include 'customers/field.html' with field=form.desired_length %}
+    <div class="full-width">{% include 'customers/field.html' with field=form.current_extensions %}</div>
+    <div class="full-width">{% include 'customers/field.html' with field=form.hair_wishes %}</div>
+</div>
+<datalist id="hair-structures"><option value="Glatt"><option value="Wellig"><option value="Lockig"><option value="Kraus"></datalist>

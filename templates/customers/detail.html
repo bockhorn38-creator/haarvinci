@@ -12,9 +12,10 @@
         </div>
         <a class="button primary" href="{% url 'customers:edit' customer.pk %}">{% icon 'edit' %}Bearbeiten</a>
     </div>
+    <nav class="record-nav" aria-label="Bereiche der Kundenakte"><a href="#kontakt">Kontakt</a><a href="#haarprofil">Haarprofil</a><a href="#extensions">Extensions</a><a href="#historie">Historie</a></nav>
     <div class="detail-columns">
         <div class="detail-main">
-            <section class="panel detail-panel">
+            <section class="panel detail-panel" id="kontakt">
                 <h2>{% icon 'user' %}Kontakt &amp; Persönliches</h2>
                 <dl class="detail-grid">
                     <div>
@@ -57,6 +58,7 @@
                     </div>
                 </dl>
             </section>
+            {% include 'customers/profile_sections.html' %}
             <section class="panel detail-panel">
                 <h2>{% icon 'note' %}Persönliche Notizen</h2>
                 {% if customer.notes %}

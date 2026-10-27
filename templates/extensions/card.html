@@ -1,0 +1,21 @@
+{% load ui %}
+<details class="panel extension-card" data-position="{{ position.pk }}" {% if forloop.first %}open{% endif %}>
+    <summary>
+        <span class="position-symbol">{% icon 'spark' %}</span>
+        <span class="position-heading"><strong>{{ position.manufacturer }}</strong><span>{{ position.extension_type }} · {{ position.color }}</span><small>{{ position.length_cm }} cm · {{ position.weight_g }} g</small></span>
+        <span class="status-pill">{{ position.get_delivery_status_display|default:'Ohne Lieferstatus' }}</span>
+    </summary>
+    {% if show_customer %}<a class="small-link position-customer" href="{% url 'customers:detail' position.customer_id %}">{% icon 'user' %}{{ position.customer }}</a>{% endif %}
+    <dl class="detail-grid">
+        <div><dt>Hersteller-Farbcode</dt><dd>{{ position.color_code|default:'Nicht hinterlegt' }}</dd></div>
+        <div><dt>Bestell- / Zuordnungsdatum</dt><dd>{{ position.assigned_on|date:'d.m.Y' }}</dd></div>
+        <div><dt>Einkaufspreis gesamt</dt><dd>{{ position.purchase_price|floatformat:2 }} €</dd></div>
+        <div><dt>Verkaufspreis gesamt</dt><dd>{% if position.sale_price is not None %}{{ position.sale_price|floatformat:2 }} €{% else %}Nicht hinterlegt{% endif %}</dd></div>
+        <div><dt>Zusätzliche Anzahl</dt><dd>{% if position.quantity %}{{ position.quantity }} {{ position.get_quantity_unit_display }}{% else %}Nicht hinterlegt{% endif %}</dd></div>
+        {% if position.notes %}<div class="full-width"><dt>Notizen</dt><dd>{{ position.notes|linebreaksbr }}</dd></div>{% endif %}
+    </dl>
+    <div class="position-actions">
+        <a class="button secondary" href="{% url 'customers:extension_edit' position.customer_id position.pk %}">{% icon 'edit' %}Position bearbeiten</a>
+        <a class="small-link danger-link" href="{% url 'customers:extension_delete' position.customer_id position.pk %}">Position löschen</a>
+    </div>
+</details>

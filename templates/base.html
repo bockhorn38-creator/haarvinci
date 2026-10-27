@@ -34,6 +34,7 @@
                     <a href="{% url 'customers:list' %}"
                        class="nav-link {% if nav == 'customers' %}active{% endif %}"
                        {% if nav == 'customers' %}aria-current="page"{% endif %}>{% icon 'users' %}Kundinnen</a>
+                    <a href="{% url 'extensions:list' %}" class="nav-link {% if nav == 'extensions' %}active{% endif %}" {% if nav == 'extensions' %}aria-current="page"{% endif %}>{% icon 'spark' %}Extensions</a>
                 </nav>
                 <a class="sidebar-note" href="{% url 'customers:create' %}">{% icon 'heart' %}<span>Jede schöne Verbindung
                     <br>
@@ -79,7 +80,7 @@
                     <a href="{% url 'customers:list' %}"
                        class="{% if nav == 'customers' %}active{% endif %}"
                        {% if nav == 'customers' %}aria-current="page"{% endif %}>{% icon 'users' %}<span>Kundinnen</span></a>
-                    <a href="{% url 'customers:create' %}">{% icon 'plus' %}<span>Hinzufügen</span></a>
+                    <a href="{% url 'extensions:list' %}" class="{% if nav == 'extensions' %}active{% endif %}" {% if nav == 'extensions' %}aria-current="page"{% endif %}>{% icon 'spark' %}<span>Extensions</span></a>
                     <a href="{% url 'account' %}"
                        class="{% if nav == 'account' %}active{% endif %}"
                        {% if nav == 'account' %}aria-current="page"{% endif %}>{% icon 'user' %}<span>Konto</span></a>

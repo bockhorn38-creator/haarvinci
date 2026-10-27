@@ -8,6 +8,7 @@ on:
       - 'desktop_app/**'
       - 'config/**'
       - 'customers/**'
+      - 'extensions/**'
       - 'core/**'
       - 'templates/**'
       - 'static/**'

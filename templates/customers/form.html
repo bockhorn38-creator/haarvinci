@@ -83,6 +83,10 @@
                         {% include 'customers/field.html' with field=form.city %}
                     </div>
                 </section>
+                <details id="haarprofil" class="panel form-section fold-card">
+                    <summary><h2>Ihr Haarprofil</h2><span>Alle Angaben sind optional.</span></summary>
+                    {% include 'customers/hair_fields.html' %}
+                </details>
                 <section class="panel form-section">
                     <div class="form-section-title">
                         <span class="section-number">03</span>

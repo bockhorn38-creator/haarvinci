@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% load ui %}
+{% block title %}Deine Extensions{% endblock %}
+{% block content %}
+<div class="page-heading"><div><p class="eyebrow">FÜR JEDEN LOOK DIE PASSENDE VERBINDUNG</p><h1>Deine Extensions<span class="rose-dot">.</span></h1><p>Alle kundenbezogenen Positionen auf einen Blick.</p></div><a class="button primary" href="{% url 'customers:list' %}">{% icon 'users' %}Kundin auswählen</a></div>
+<form method="get" class="panel extension-filters" role="search" aria-label="Extensions durchsuchen">
+    <div class="form-field"><label for="extension-search">Kundin, Hersteller, Farbe oder Farbcode</label><input id="extension-search" type="search" name="q" value="{{ query }}" placeholder="z. B. Marie oder Naturblond" maxlength="200"></div>
+    <div class="form-field"><label for="delivery-filter">Lieferstatus</label><select id="delivery-filter" name="status"><option value="">Alle Lieferstatus</option>{% for value,label in statuses %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <button class="button primary" type="submit">{% icon 'search' %}Suchen</button>
+    {% if query or status %}<a class="small-link" href="{% url 'extensions:list' %}">Zurücksetzen</a>{% endif %}
+</form>
+<div class="extension-totals"><span>{{ page.paginator.count }} Position{{ page.paginator.count|pluralize:'en' }}{% if query or status %} in dieser Auswahl{% endif %}</span><span>Einkaufswert: <strong>{{ purchase_total|floatformat:2 }} €</strong></span></div>
+<div class="position-stack">
+{% for position in page %}{% include 'extensions/card.html' with show_customer=True %}{% empty %}<div class="panel empty-state"><span class="empty-icon">{% icon 'spark' %}</span><h2>{% if query or status %}Keine passenden Extensions{% else %}Hier beginnt der nächste Look.{% endif %}</h2><p>{% if query or status %}Versuche einen anderen Suchbegriff oder Lieferstatus.{% else %}Öffne eine Kundenakte, um die ersten Extensions zuzuordnen.{% endif %}</p><a class="button secondary" href="{% url 'customers:list' %}">Zu deinen Kundinnen</a></div>{% endfor %}
+</div>
+{% if page.has_other_pages %}<nav class="pagination" aria-label="Extensions-Seiten">{% if page.has_previous %}<a class="button secondary" href="?q={{ query|urlencode }}&amp;status={{ status|urlencode }}&amp;seite={{ page.previous_page_number }}">Zurück</a>{% endif %}<span>Seite {{ page.number }} von {{ page.paginator.num_pages }}</span>{% if page.has_next %}<a class="button secondary" href="?q={{ query|urlencode }}&amp;status={{ status|urlencode }}&amp;seite={{ page.next_page_number }}">Weiter</a>{% endif %}</nav>{% endif %}
+{% endblock %}

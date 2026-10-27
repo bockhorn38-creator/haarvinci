@@ -120,13 +120,13 @@ def main():
             expect(page.get_by_role("heading", name="Mila Testgarten")).to_be_visible()
             detail_url = page.url
             page.reload()
-            expect(page.get_by_text("Natürliche Fülle gewünscht.", exact=False)).to_be_visible()
+            expect(page.locator(".customer-notes")).to_contain_text("Natürliche Fülle gewünscht.")
             page.get_by_role("link", name="Bearbeiten", exact=True).click()
             page.get_by_label("Persönliche Notizen", exact=False).fill(
                 "Fiktive Notiz nach Bearbeitung. Dauerhaft gespeichert."
             )
             page.get_by_role("button", name="Änderungen speichern", exact=True).click()
-            expect(page.get_by_text("Dauerhaft gespeichert.", exact=False)).to_be_visible()
+            expect(page.locator(".customer-notes")).to_contain_text("Dauerhaft gespeichert.")
             page.screenshot(path=str(screenshots / "kundenakte-pixel.png"), full_page=True)
             with page.expect_download() as download_info:
                 page.get_by_role("link", name="Kundenakte exportieren").click()

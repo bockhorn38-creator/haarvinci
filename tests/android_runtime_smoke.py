@@ -90,20 +90,41 @@ def main():
                 "first_consultation": "2026-10-01",
                 "notes": "Vor der Sicherung",
                 "version": "1",
+                "natural_color": "Dunkelblond",
+                "natural_length": "25,5",
             }
             page, url = post("/kundinnen/neu/", data)
             detail = urllib.parse.urlsplit(url).path
             assert "Vor der Sicherung" in page
+            position_data = {
+                "manufacturer": "Fiktivhaar Atelier",
+                "extension_type": "Tape-Ins",
+                "color": "Kupfer",
+                "color_code": "#18/22",
+                "length_cm": "50",
+                "weight_g": "100,25",
+                "purchase_price": "149,90",
+                "sale_price": "249,95",
+                "assigned_on": "2026-10-01",
+                "version": "1",
+            }
+            page, _ = post(detail + "extensions/neu/", position_data)
+            assert "Fiktivhaar Atelier" in page and "149,90" in page
+            position_id = re.search(r'data-position="([^"]+)"', page).group(1)
+            position_edit = detail + "extensions/" + position_id + "/bearbeiten/"
             archive = Path(temporary) / "test.haarvinci"
             runtime.export_backup(str(archive))
             assert json.loads(runtime.inspect_backup(str(archive)))["customers"] == 7
             post(detail + "bearbeiten/", data | {"notes": "Nach der Sicherung"})
+            post(position_edit, position_data | {"color": "Schwarz nach Sicherung"})
             info = json.loads(runtime.restore(str(archive)))
             origin = info["origin"]
             gate()
             post("/anmelden/", {"username": "conny-android-test", "password": password})
             page, _ = get(detail)
             assert "Vor der Sicherung" in page and "Nach der Sicherung" not in page
+            assert "25,5 cm" in page and "Kupfer" in page and "Schwarz nach Sicherung" not in page
+            assert "149,90" in page
             page, _ = get("/konto/")
             assert "haarvinci://backup" in page and "Deine Daten auf dem Pixel" in page
             parts = urllib.parse.urlsplit(origin)
@@ -119,7 +140,7 @@ def main():
             assert not old_thread.is_alive(), "Interner Dienst blieb bei Keep-Alive geöffnet"
             keepalive.close()
             print(
-                "Android-Kern geprüft: Cookie-Zugriffsschutz, Ersteinrichtung, Kundin speichern, Sicherung und echte Wiederherstellung mit erneuter Anmeldung."
+                "Android-Kern geprüft: Cookie-Zugriffsschutz, Ersteinrichtung, Kundin mit Haarprofil und Extensions speichern, Sicherung und echte Wiederherstellung mit erneuter Anmeldung."
             )
         finally:
             runtime._runtime.stop()

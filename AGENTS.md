@@ -26,3 +26,8 @@
 - Android-Kern: uv run --extra android python tests/android_runtime_smoke.py. APK-Bau und Installation werden in .github/workflows/android.yml auf einem echten Android-Emulator geprüft.
 - Nur eine erfolgreich installierte und funktional geprüfte APK als lauffähig ausgeben. Entwicklungs- und Freigabesignierung unterscheiden. Keine Signierschlüssel in Git/Chat.
 - Android-Backupformat bleibt mit Windows kompatibel; keine Synchronisierung zwischen Geräten behaupten.
+
+- Android 0.4 erweitert Kunden um optionale Haarprofile und das kundenbezogene Fachmodul `extensions`. Keine Lager-/Zahlungs-/Behandlungsverwaltung hinzufügen. Details: docs/EXTENSIONS.md.
+- Extensions-Preise sind Decimal-Gesamtpreise, Mengen beziehen sich auf die Position. Jede Abfrage über customer__owner begrenzen; Kundenzuordnung nie aus POST übernehmen.
+- Positionsänderung und Historienereignis in derselben Transaktion speichern. Versionsprüfung auch bei bestätigter Löschung erhalten; die Historien-Momentaufnahme bleibt danach bestehen.
+- Mobile Oberflächenprüfung: python tests/extensions_browser_smoke.py bei lokal laufender Test-App. Nur fiktive Daten, keine echten Besuche aus Extensions-Anzahl ableiten.

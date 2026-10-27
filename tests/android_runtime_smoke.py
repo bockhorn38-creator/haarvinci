@@ -1,5 +1,6 @@
 """Isolierte Prüfung des Android-Python-Kerns vor dem eigentlichen APK-Test."""
 
+import http.client
 import http.cookiejar
 import json
 import re
@@ -105,6 +106,18 @@ def main():
             assert "Vor der Sicherung" in page and "Nach der Sicherung" not in page
             page, _ = get("/konto/")
             assert "haarvinci://backup" in page and "Deine Daten auf dem Pixel" in page
+            parts = urllib.parse.urlsplit(origin)
+            keepalive = http.client.HTTPConnection(parts.hostname, parts.port)
+            keepalive.request(
+                "GET", "/bereit/", headers={"Cookie": "haarvinci_android_gate=" + info["token"]}
+            )
+            response = keepalive.getresponse()
+            assert response.status == 200
+            response.read()
+            old_thread = runtime._runtime.thread
+            runtime._runtime.stop()
+            assert not old_thread.is_alive(), "Interner Dienst blieb bei Keep-Alive geöffnet"
+            keepalive.close()
             print(
                 "Android-Kern geprüft: Cookie-Zugriffsschutz, Ersteinrichtung, Kundin speichern, Sicherung und echte Wiederherstellung mit erneuter Anmeldung."
             )

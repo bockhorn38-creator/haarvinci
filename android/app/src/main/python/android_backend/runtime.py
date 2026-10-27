@@ -4,6 +4,7 @@ import json
 import os
 import secrets
 import threading
+import traceback
 from pathlib import Path
 
 from desktop_app.storage import (
@@ -45,8 +46,10 @@ class Runtime:
 
         call_command("migrate", interactive=False, verbosity=0)
         connections.close_all()
+        self.sockets = {}
         self.server = create_server(
             get_wsgi_application(),
+            map=self.sockets,
             host="127.0.0.1",
             port=0,
             threads=4,
@@ -66,8 +69,12 @@ class Runtime:
     def stop(self):
         if self.server:
             self.server.task_dispatcher.shutdown(timeout=10)
-            self.server.close()
+            from waitress import wasyncore
+
+            wasyncore.close_all(self.sockets)
             self.thread.join(timeout=10)
+            if self.thread.is_alive() or self.server.task_dispatcher.threads:
+                raise RuntimeError("Der interne Dienst konnte nicht vollständig angehalten werden.")
             self.server = self.thread = None
         from django.db import connections
 
@@ -81,7 +88,11 @@ def start(data_dir, resources):
     global _runtime
     with _guard:
         if _runtime is None:
-            _runtime = Runtime(data_dir, resources)
+            try:
+                _runtime = Runtime(data_dir, resources)
+            except Exception:
+                traceback.print_exc()
+                raise
         return json.dumps({"origin": _runtime.origin, "token": _runtime.token})
 
 

@@ -66,14 +66,7 @@ jobs:
           ram-size: 2048M
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -camera-front none -no-snapshot
-          script: |
-            set -euo pipefail
-            android/gradlew -p android --no-daemon --max-workers=2 :app:connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.class=de.haarvinci.app.AndroidWorkflowTest#a_fullWorkflow' 2>&1 | tee test-results/android/emulator.log
-            adb shell am force-stop de.haarvinci.app.preview
-            adb shell am instrument -w -e class 'de.haarvinci.app.AndroidWorkflowTest#b_persistenceAfterProcessRestart' de.haarvinci.app.preview.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee test-results/android/restart.log
-            test "$(rg -c 'OK \(1 test\)' test-results/android/restart.log)" -ge 1
-            if rg -q 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/restart.log; then exit 1; fi
-            adb pull /sdcard/Android/data/de.haarvinci.app.preview/files/test-results test-results/android/screenshots
+          script: bash android/test_emulator.sh
       - name: APK-Signatur und Paket prüfen
         run: |
           set -euo pipefail
@@ -93,7 +86,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          paths = list(Path('test-results/android').glob('*.log')) + list(Path('android/app/build/outputs/androidTest-results').rglob('*.xml'))
+          paths = list(Path('test-results/android').glob('*.log')) + list(Path('test-results/android').glob('logcat.txt')) + list(Path('android/app/build/outputs/androidTest-results').rglob('*.xml'))
           for path in paths:
               text = path.read_text(errors='replace')[-14000:]
               text = text.replace('%','%25').replace('\r','%0D').replace('\n','%0A')

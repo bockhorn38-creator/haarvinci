@@ -6,7 +6,7 @@ Connys persönliches Kundenbuch für Haarverlängerung und Haarverdichtung. Die 
 
 Haarvinci wird zusätzlich als eigenständige Android-Test-APK mit lokaler Datenbank gebaut. Installation, Sicherungen, Geräteübernahme und Grenzen der Testsignierung stehen in [docs/ANDROID.md](docs/ANDROID.md). Die APK wird im Workflow „Haarvinci Android-APK prüfen“ auf einem emulierten Pixel installiert und funktional geprüft.
 
-**[Android-Testversion 0.4.0 direkt als APK herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.4.0.apk)** (ca. 52 MB, kein ZIP).
+**[Android-Testversion 0.5.0 direkt als APK herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.5.0.apk)** (ca. 55 MB, kein ZIP).
 
 ## Windows-Version für PC und Laptop
 
@@ -25,11 +25,14 @@ Die folgenden bisherigen Startbefehle betreffen die Server-/Entwicklungsversion.
 - Mehrere kundenbezogene Extensions-Positionen anlegen, bearbeiten und bestätigt löschen; freie Hersteller/Farbcodes, exakte Gesamtpreise und Lieferstatus.
 - Lesbare chronologische Historie mit Vorher-/Nachherwerten und erhaltenen Momentaufnahmen gelöschter Positionen.
 - Extensions-Übersicht mit Kundinnen-/Produktsuche, Lieferstatusfilter und Eingabevorschlägen.
+- Lokaler Kalender mit Tages-, Wochen- und Monatsansicht, Terminanlage, Verschieben, Absagen und Puffer-/Überschneidungsprüfung.
+- Nächster/letzter abgeschlossener Termin und tatsächliche abgeschlossene Besuche in der Kundenakte.
+- Optionale Google-Anbindung mit privater FreeBusy-Abfrage, geschäftlicher Synchronisierung und Konfliktentscheidungen. **Noch keine echte Kontoabnahme:** OAuth-Projekt und eigener HTTPS-Anmeldedienst sind nach [docs/GOOGLE-KALENDER.md](docs/GOOGLE-KALENDER.md) manuell einzurichten.
 - Einzelne Kundenakten samt Haarprofil, Extensions und Historie als JSON-Datei exportieren.
 - Lokale PostgreSQL-Sicherungen mit Prüfsummen und Wiederherstellungsprobe.
 - Online-PWA mit App-Symbolen. Keine Kundendaten im Offline-Cache.
 
-Google Kalender, Behandlungen, Bestellungen, Zahlungen, Statistiken und KI sind bewusst noch nicht implementiert. Die Extensions-Struktur ist in [docs/EXTENSIONS.md](docs/EXTENSIONS.md) beschrieben. Die fachlichen Grenzen und die vorgesehenen Erweiterungswege der weiteren Module stehen in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
+Behandlungen, Bestellungen, Zahlungen, Statistiken und KI sind bewusst noch nicht implementiert. Kalender und Termine sind in [docs/KALENDER.md](docs/KALENDER.md) beschrieben. Die Extensions-Struktur ist in [docs/EXTENSIONS.md](docs/EXTENSIONS.md) beschrieben. Die fachlichen Grenzen und die vorgesehenen Erweiterungswege der weiteren Module stehen in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 
 ## Starten – Schritt für Schritt
 
@@ -90,6 +93,7 @@ Für den echten Browser-Test zusätzlich die App in einem anderen Terminal start
 ```bash
 uv run python tests/browser_smoke.py
 uv run python tests/extensions_browser_smoke.py
+uv run python tests/calendar_browser_smoke.py
 ```
 
 Im vorbereiteten Cloud-System wird das bereits installierte Chromium verwendet. Auf anderen Rechnern Chromium über den Paketmanager bereitstellen und `CHROMIUM_PATH` auf dessen Programmdatei setzen, oder die passende Playwright-Version mit `uv run playwright install chromium` installieren. Ohne `CHROMIUM_PATH` nutzt der Test `/usr/bin/chromium`, sofern vorhanden, sonst Playwrights Browser.

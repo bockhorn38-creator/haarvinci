@@ -28,7 +28,7 @@ Die Oberfläche ist deutsch, für Touch ausgelegt, mit unterer Navigation auf Sm
 
 ## Spätere Erweiterungen – noch nicht implementiert
 
-- `calendar`: offizielle Google-OAuth-Anbindung, serverseitig verschlüsselte Refresh-Tokens, manuelle Zuordnung, eindeutige externe Ereignis-IDs, Wiederholungs-/Konfliktbehandlung. Privattermine nicht anhand von Titel vermuten.
+- Kalender/Termine sind seit 0.5 in `appointments` implementiert, die optionale Google-Verbindung nutzt einen separaten OAuth-Anmeldedienst und native Android-Tokenablage. Echte Google-Einrichtung/Abnahme stehen noch aus; siehe unten.
 - Optionale spätere Produktvorlagen können häufig verwendete Hersteller-/Farbkombinationen aus dem bereits vorhandenen kundenbezogenen Modul `extensions` wiederverwenden. Eine Lagerverwaltung ist nicht vorgesehen.
 - `treatments`, `orders`: eigene Modelle mit geschützten Verweisen auf Customer. Bestellungen kundenbezogen statt umfassender Lagerverwaltung.
 - `payments`: exakte Dezimalbeträge und getrennte Zahlungs-/Forderungszustände. Nur eingegangene Zahlungen zählen als Zahlungseingang.
@@ -52,3 +52,9 @@ PyInstaller bündelt Python, Qt, Django, Waitress, Vorlagen und statische Dateie
 Die eigenständige Android-Hülle mit Chaquopy und System-WebView verwendet denselben Django-Kern und eine private SQLite-Datenbank. Android benötigt für die Kundenverwaltung keinen Server und keine Internetverbindung. Die oberen Abschnitte zum Hosting beschreiben ausschließlich die ursprüngliche Servervariante.
 
 Kundenverwaltung und kundenbezogene Extensions sind erweitert: optionale strukturierte Haarprofile auf `Customer`, separate `extensions.ExtensionPosition` mit exakten Dezimal-Gesamtpreisen und `customers.CustomerEvent` für chronologische Momentaufnahmen/Vorher-/Nachherwerte. Details, Datumssemantik, Löschhistorie und spätere Verknüpfungen sind in [EXTENSIONS.md](EXTENSIONS.md) beschrieben. Hersteller und Farbcodes bleiben freie Eingaben. Es gibt keine Lagerbestände oder vorbereiteten Zahlungsattrappen.
+
+## Kalender und optionale Google-Anbindung (0.5)
+
+`appointments` enthält echte Termine, erweiterbare Terminarten, Google-Verknüpfungen und getrennte Belegungsmodelle. Zeitzonenbehaftete Zeitpunkte, UTC-Dauer/Pufferberechnung, Eigentümersperren und Versionen sichern Änderungen. Tages-/Wochen-/Monatsansicht und Besuchszählung funktionieren lokal auf beiden Datenbankprofilen. Keine Behandlungs- oder Zahlungsattrappen. Details: [KALENDER.md](KALENDER.md).
+
+Android öffnet die Google-Anmeldung im Systembrowser. Der optionale, separat zu betreibende `google_broker` verwendet einen vertraulichen Web-OAuth-Client, State, PKCE und verschlüsselte einmalige Übergaben. Dauerhafte OAuth-Tokens liegen ausschließlich AES-GCM-verschlüsselt über Android Keystore auf dem Pixel; das Client-Geheimnis bleibt auf dem Anmeldedienst. Google Calendar wird direkt vom Pixel abgefragt, ohne Kundendaten durch den Anmeldedienst zu leiten. Android WorkManager fordert Abgleiche unter Internetbedingung an. Der Dienst wurde nicht öffentlich eingerichtet; echte Konto- und Berechtigungstests fehlen noch. Einrichtung und genaue Grenzen: [GOOGLE-KALENDER.md](GOOGLE-KALENDER.md).

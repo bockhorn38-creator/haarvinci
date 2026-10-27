@@ -2,7 +2,7 @@
 
 Die Android-Version öffnet sich als eigene App auf dem Pixel. Python, Django und die SQLite-Datenbank sind enthalten; ein externer Server oder eine Verbindung zur Windows-App ist für die Kundenverwaltung nicht erforderlich.
 
-## Die aktuelle Testversion 0.4.0
+## Die aktuelle Testversion 0.5.0
 
 Diese APK ist eine **Entwicklungs-/Testversion für ausschließlich fiktive Kundendaten**. Sie wird mit einem Android-Entwicklungsschlüssel signiert und als APK bereitgestellt, nicht über den Play Store veröffentlicht. Der Fingerabdruck des verwendeten Zertifikats und die SHA-256-Prüfsumme liegen dem Build bei. Für langfristige Updates und einen Produktivbetrieb wird später eine dauerhaft verwaltete Freigabesignierung benötigt. Verschiedene Testbuilds können unterschiedliche Signaturen haben.
 
@@ -12,20 +12,33 @@ Zielgeräte: Android ab Version 8 (API 26) mit 64-Bit-ARM-Prozessor, insbesonder
 
 ## Installieren und starten
 
-1. Die [geprüfte Android-Test-APK 0.4.0 direkt herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.4.0.apk) (einzelne APK, ca. 52 MB; kein ZIP, keine GitHub-Anmeldung erforderlich).
-2. Die heruntergeladene `Haarvinci-Android-Test-0.4.0.apk` auf dem Pixel öffnen. Android führt durch die Installation einer selbst heruntergeladenen App. Falls erforderlich, die Installation aus dieser Quelle für den verwendeten Browser erlauben. Nur die selbst bezogene, geprüfte Datei aus diesem Projekt verwenden.
+1. Die [geprüfte Android-Test-APK 0.5.0 direkt herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.5.0.apk) (einzelne APK, ca. 55 MB; kein ZIP, keine GitHub-Anmeldung erforderlich).
+2. Die heruntergeladene `Haarvinci-Android-Test-0.5.0.apk` auf dem Pixel öffnen. Android führt durch die Installation einer selbst heruntergeladenen App. Falls erforderlich, die Installation aus dieser Quelle für den verwendeten Browser erlauben. Nur die selbst bezogene, geprüfte Datei aus diesem Projekt verwenden.
 3. Haarvinci über das App-Symbol öffnen. Beim ersten Start deinen Vornamen, einen Benutzernamen und ein eigenes Passwort mit mindestens zwölf Zeichen festlegen.
 4. Zum Ausprobieren können sechs fiktive Testkundinnen angelegt werden. Die bisherigen Funktionen Anlegen, Suchen, Anzeigen, Bearbeiten und Export stehen in der App zur Verfügung.
 
 Die Kundenverwaltung arbeitet lokal und benötigt keine Internetverbindung. Die App speichert ihre Daten im privaten Android-Appordner, nicht im LocalStorage. Eine Anmeldung in Google oder Zugriff auf Kontakte, Fotos oder Standort wird nicht angefordert.
 
-Die Datei liegt als einzelne APK im separaten [GitHub-Download-Zweig](https://github.com/bockhorn38-creator/haarvinci/tree/android-test-downloads) und unterliegt nicht der 30-Tage-Aufbewahrung der ursprünglichen Build-Artefakte. Sie wurde unverändert aus dem bereits erfolgreich geprüften Build übernommen, ohne zusätzlichen Bau oder neue Signierung. Prüfsumme und Zertifikatsinformationen stehen daneben. Die GitHub-Actions-Integration hat das Anlegen des gewünschten Releases mit **HTTP 403: Resource not accessible by integration** verweigert; deshalb wird dieser direkte Datei-Download verwendet. Die Repository-Sichtbarkeit wurde nicht geändert. Die installierte App funktioniert unabhängig von der Verfügbarkeit des Downloads.
+Die Datei liegt als einzelne APK im separaten [GitHub-Download-Zweig](https://github.com/bockhorn38-creator/haarvinci/tree/android-test-downloads) und unterliegt nicht der 30-Tage-Aufbewahrung der ursprünglichen Build-Artefakte. Sie wurde unverändert aus dem bereits erfolgreich geprüften Build übernommen, ohne zusätzlichen Bau oder neue Signierung. Prüfsumme und Zertifikatsinformationen stehen im Unterordner `0.5.0` daneben. Die GitHub-Actions-Integration hat das Anlegen eines Releases zuvor mit **HTTP 403: Resource not accessible by integration** verweigert; deshalb wird dieser direkte Datei-Download verwendet. Die Repository-Sichtbarkeit wurde nicht geändert. Die installierte App funktioniert unabhängig von der Verfügbarkeit des Downloads.
 
 Vollständiger Download-Link zum Kopieren:
 
 ```text
-https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.4.0.apk
+https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.5.0.apk
 ```
+
+## Neu in 0.5.0: Kalender und Termine
+
+1. Unten **Kalender** öffnen. **Tag**, **Woche**, **Monat**, Pfeile und **Heute** ausprobieren.
+2. **Neuer Termin** wählen, eine fiktive Kundin und Terminart auswählen, Datum und Uhrzeiten eintragen. Die Dauer wird automatisch berechnet.
+3. Einen Puffer nach dem Termin eintragen. Einen zweiten Termin in diese Zeit legen: Die App muss warnen und verlangt eine bewusste Bestätigung, falls du den Konflikt trotzdem übernehmen möchtest.
+4. Den Termin öffnen und **Bearbeiten / verschieben** oder **Termin absagen** ausprobieren. Absagen bleiben sichtbar und zählen nicht als Besuche.
+5. Einen vergangenen fiktiven Termin als **Abgeschlossen** speichern. Die Kundenakte zeigt den Besuch sowie den nächsten und letzten abgeschlossenen Termin. Zukünftige Termine lassen sich nicht bereits als abgeschlossen speichern.
+6. App schließen und erneut öffnen. Termine und ihre Kundenverknüpfung bleiben erhalten.
+
+Der lokale Kalender funktioniert vollständig ohne Google und ohne Internet. Einrichtungs- und Nutzungsdetails: [KALENDER.md](KALENDER.md).
+
+**Google ist optional und zunächst nicht verbunden.** Die technische Integration ist implementiert und mit simulierten API-Antworten geprüft; eine echte Verbindung erfordert die eigene Google-Cloud-Konfiguration und den optionalen eigenen HTTPS-Anmeldedienst. Bislang keine Abnahme mit einem echten Google-Konto. Anleitung: [GOOGLE-KALENDER.md](GOOGLE-KALENDER.md). Private Kalender liefern ausschließlich Belegt-Zeiten; Tokens bleiben verschlüsselt außerhalb der lokalen Kunden-Datenbank.
 
 ## Neu in 0.4.0
 
@@ -35,9 +48,9 @@ https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-down
 - Eigener Bereich **Extensions** in der unteren Navigation, Suche nach Kundin/Produkt und Filter nach Lieferstatus. Eigene vorhandene Angaben werden beim Erfassen vorgeschlagen.
 - Logo, Farben und bisherige Gestaltung bleiben erhalten. Keine Haarlagerverwaltung und keine neuen Sicherungsfunktionen.
 
-### Von 0.3.0 auf diese Testversion wechseln
+### Von 0.4.0 auf diese Testversion wechseln
 
-Der Versionscode wurde von 1 auf 2 erhöht. Der neue CI-Testbuild verwendet einen anderen Entwicklungsschlüssel; eine direkte Aktualisierung der installierten 0.3.0 ist deshalb nicht möglich. Deinstalliere in diesem Fall die alte Haarvinci-Test-App und installiere die neue APK. Dabei werden die bisherigen lokalen Testdaten gelöscht. Der Neuaufbau des Testbestands ist in dieser Entwicklungsphase ausdrücklich vorgesehen. Beim ersten Start können wieder sechs fiktive Kundinnen angelegt werden.
+Der Versionscode wurde auf 3 erhöht. Die Signatur wurde mit 0.4.0 verglichen und unterscheidet sich: Für diese Testversion die alte App zuerst deinstallieren, dann die neue APK installieren. Dabei werden bisherige lokale Testdaten gelöscht. Das ist für diese Entwicklungsphase ausdrücklich akzeptiert. Beim ersten Start wieder einen eigenen Zugang und bei Bedarf sechs fiktive Kundinnen anlegen. Eine dauerhaft verwaltete Freigabesignierung folgt vor echtem Betrieb.
 
 ### Die neuen Bereiche ausprobieren
 
@@ -48,7 +61,7 @@ Der Versionscode wurde von 1 auf 2 erhöht. Der neue CI-Testbuild verwendet eine
 5. Unten **Extensions** öffnen und nach der Kundin, einem Hersteller oder Farbcode suchen. Einen Lieferstatus filtern.
 6. Die App schließen und wieder öffnen: Haarprofil und verbliebene Positionen bleiben gespeichert.
 
-Die Extensions-Anzahl ist keine Besuchszahl; Bestelldatum und letzter tatsächlicher Besuch sind unterschiedliche Angaben. Behandlungen, Besuchszahlen und Zahlungen folgen später. Weitere fachliche Details: [EXTENSIONS.md](EXTENSIONS.md).
+Die Extensions-Anzahl ist keine Besuchszahl; Bestelldatum und letzter tatsächlicher Besuch sind unterschiedliche Angaben. Besuchszahlen sind seit 0.5 an abgeschlossene Termine gebunden. Behandlungen und Zahlungen folgen später. Weitere fachliche Details: [EXTENSIONS.md](EXTENSIONS.md).
 
 ## Sicherungen und Übernahme zwischen Rechner und Pixel
 

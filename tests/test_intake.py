@@ -167,6 +167,8 @@ class ImportTests(TestCase):
             lambda p: p.update(version=True),
             lambda p: p.update(id=[]),
             lambda p: p["customers"][0]["data"].update(owner="1"),
+            lambda p: p["customers"][0]["data"].update(first_name="\ud800"),
+            lambda p: p["customers"][0].update(hint="\ud800"),
             lambda p: p["extensions"][0].update(customer_ref=[]),
             lambda p: p["customers"][0]["data"].update(notes={}),
             lambda p: p["appointments"][0]["data"].update(allow_overlap=True),

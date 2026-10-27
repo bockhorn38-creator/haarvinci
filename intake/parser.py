@@ -54,7 +54,15 @@ def scalars(data):
         for value in data.values()
     ):
         raise ImportProblem("Datenfelder dürfen nur Text, Zahlen oder null enthalten.")
-    return {name: "" if value is None else str(value) for name, value in data.items()}
+    result = {name: "" if value is None else str(value) for name, value in data.items()}
+    try:
+        for value in result.values():
+            value.encode("utf-8")
+    except UnicodeError:
+        raise ImportProblem(
+            "Der Text enthält ungültige Unicode-Zeichen. Bitte die Antwort neu kopieren."
+        ) from None
+    return result
 
 
 def canonical(value):
@@ -73,7 +81,13 @@ def canonical(value):
 
 
 def parse(text):
-    if not isinstance(text, str) or len(text.encode("utf-8")) > MAX_BYTES:
+    try:
+        size = len(text.encode("utf-8")) if isinstance(text, str) else MAX_BYTES + 1
+    except UnicodeError:
+        raise ImportProblem(
+            "Der Text enthält ungültige Unicode-Zeichen. Bitte die Antwort neu kopieren."
+        ) from None
+    if size > MAX_BYTES:
         raise ImportProblem(
             "Der Import darf höchstens 64 KiB Text enthalten. Bitte kleinere Pakete teilen."
         )
@@ -135,6 +149,7 @@ def parse(text):
             or len(customer.get("hint", "")) > 200
         ):
             raise ImportProblem("Kundenmodus oder Suchhinweis ist ungültig.")
+        scalars({"hint": customer.get("hint", "")})
         customer.setdefault("data", {})
         shape(customer["data"], CUSTOMER_FIELDS)
         customer["data"] = scalars(customer["data"])

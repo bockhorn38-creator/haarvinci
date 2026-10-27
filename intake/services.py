@@ -65,13 +65,17 @@ def prepare(user, session, text):
             DRAFTS.pop(old.key, None)
         draft = Draft(user.pk, session, payload, digest)
         DRAFTS[draft.key] = draft
-        timer = threading.Timer(TTL, expire, args=[draft])
+        timer = threading.Timer(TTL, expire, args=[draft.key])
         timer.daemon = True
         timer.start()
     return draft, None
 
 
-def expire(draft):
+def expire(key):
+    with LOCK:
+        draft = DRAFTS.get(key)
+    if draft is None:
+        return
     with draft.lock, LOCK:
         if time.monotonic() - draft.created >= TTL:
             DRAFTS.pop(draft.key, None)

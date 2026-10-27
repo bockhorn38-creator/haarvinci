@@ -44,7 +44,7 @@ public class AndroidWorkflowTest {
         return value == JSONObject.NULL ? "" : value.toString();
     }
     private JSONObject state() throws Exception {
-        String result = js("JSON.stringify({path:location.pathname,text:document.body?document.body.innerText:'',lang:document.documentElement.lang})");
+        String result = js("JSON.stringify({path:location.pathname,query:location.search,text:document.body?document.body.innerText:'',lang:document.documentElement.lang})");
         return result.isEmpty() ? new JSONObject().put("path", "").put("text", "") : new JSONObject(result);
     }
     private void waitFor(String path, String text) throws Exception {
@@ -202,8 +202,14 @@ public class AndroidWorkflowTest {
             waitFor(detail, "1 tatsächlich abgeschlossener Besuch");
             for (String mode : new String[]{"tag", "woche", "monat"}) {
                 open("/kalender/?ansicht=" + mode + "&datum=" + tomorrow);
-                waitFor("/kalender/", "Mila");
-                assertTrue(js("location.search").contains("ansicht=" + mode));
+                long viewDeadline = System.currentTimeMillis() + 45000;
+                boolean viewReady = false;
+                while (System.currentTimeMillis() < viewDeadline) {
+                    JSONObject current = state();
+                    if (current.optString("query").contains("ansicht=" + mode) && current.getString("text").contains("Mila")) { viewReady = true; break; }
+                    Thread.sleep(200);
+                }
+                assertTrue("Kalenderansicht " + mode + " fehlt: " + state(), viewReady);
                 screenshot("android-kalender-" + mode + ".png");
             }
             open("/kalender/google/");

@@ -30,12 +30,15 @@ def import_label(name):
 
 
 @register.filter
-def import_status(value):
+def import_status(value, field="status"):
+    from django.utils.formats import localize
+
     from appointments.models import Appointment
     from extensions.models import ExtensionPosition
 
-    return dict(
-        Appointment.Status.choices
-        + ExtensionPosition.Delivery.choices
-        + ExtensionPosition.Unit.choices
-    ).get(value, value)
+    choices = {
+        "status": Appointment.Status.choices,
+        "delivery_status": ExtensionPosition.Delivery.choices,
+        "quantity_unit": ExtensionPosition.Unit.choices,
+    }
+    return dict(choices.get(field, [])).get(value, localize(value))

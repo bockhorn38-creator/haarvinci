@@ -142,6 +142,20 @@ public class CalendarProviderTest {
             String marker2 = UUID.randomUUID().toString().replace("-", "");
             JSONObject second = write(business, fp, marker2, "", "", "insert", data);
             assertEquals("deleted", write(business, fp, marker2, second.getString("id"), second.getString("revision"), "delete", data).getString("status"));
+            String marker3 = UUID.randomUUID().toString().replace("-", "");
+            JSONObject third = write(business, fp, marker3, "", "", "insert", data);
+            long duplicate = event(business, "Fiktive Kopie", "2027-01-15T09:00:00Z", "2027-01-15T10:00:00Z", false, null);
+            ContentValues copiedMarker = new ContentValues(); copiedMarker.put(Events.DESCRIPTION, "[Haarvinci-Verknüpfung: " + marker3 + "]"); change(Long.toString(duplicate), copiedMarker);
+            assertEquals("duplicate", read(business, fp, marker3, third.getString("id")).getString("status"));
+            assertEquals("race", write(business, fp, marker3, third.getString("id"), third.getString("revision"), "update", data).getString("status"));
+            resolver.delete(Events.CONTENT_URI, Events._ID + "=?", new String[]{Long.toString(duplicate)});
+            ContentValues moved = new ContentValues(); moved.put(Events.CALENDAR_ID, Long.parseLong(privateCal)); change(third.getString("id"), moved);
+            ArrayList<String> movedQueries = new ArrayList<>();
+            CalendarProviderBridge.audit = (uri, projection, selection, args) -> { if (uri.equals(Events.CONTENT_URI)) movedQueries.add(String.join(",", projection)); };
+            assertEquals("moved", read(business, fp, marker3, third.getString("id")).getString("status"));
+            CalendarProviderBridge.audit = null;
+            assertEquals(Arrays.asList("_id,calendar_id"), movedQueries);
+
         } finally {
             CalendarProviderBridge.audit = null;
             for (Uri fixture: fixtures) resolver.delete(fixture, null, null);

@@ -27,33 +27,39 @@ adb shell pm list instrumentation
 instrumentation_runner=$(adb shell pm list instrumentation | tr -d '\r' | grep -F "instrumentation:$test_package/" | cut -d ' ' -f1 | sed 's/^instrumentation://')
 test -n "$instrumentation_runner"
 
+test_failures=0
 adb shell am instrument -w -e class 'de.haarvinci.app.AndroidWorkflowTest#a_fullWorkflow' "$instrumentation_runner" 2>&1 | tee test-results/android/emulator.log
 if ! grep -Fq 'OK (1 test)' test-results/android/emulator.log || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/emulator.log; then
   echo 'Der vollständige Android-Test wurde nicht erfolgreich abgeschlossen.'
-  exit 1
+  test_failures=$((test_failures + 1))
 fi
 adb shell am force-stop "$app_package"
 adb shell am instrument -w -e class 'de.haarvinci.app.AndroidWorkflowTest#b_persistenceAfterProcessRestart' "$instrumentation_runner" 2>&1 | tee test-results/android/restart.log
 if ! grep -Fq 'OK (1 test)' test-results/android/restart.log || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/restart.log; then
   echo 'Die Android-Neustartprüfung wurde nicht erfolgreich abgeschlossen.'
-  exit 1
+  test_failures=$((test_failures + 1))
 fi
 
 adb shell am instrument -w -e class 'de.haarvinci.app.CalendarProviderTest#actualProviderAndNativeBackend' "$instrumentation_runner" 2>&1 | tee test-results/android/provider.log
 if ! grep -Fq 'OK (1 test)' test-results/android/provider.log || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/provider.log; then
   echo 'CalendarContract-Prüfung mit echten Provider-Testdaten fehlgeschlagen.'
-  exit 1
+  test_failures=$((test_failures + 1))
 fi
 
 adb shell am force-stop "$app_package"
 adb shell am instrument -w -e class 'de.haarvinci.app.CalendarProviderTest#mappingSurvivesProcessRestart' "$instrumentation_runner" 2>&1 | tee test-results/android/provider-restart.log
 if ! grep -Fq 'OK (1 test)' test-results/android/provider-restart.log || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/provider-restart.log; then
   echo 'Die Kalenderzuordnung hat die Prozess-Neustartprüfung nicht bestanden.'
-  exit 1
+  test_failures=$((test_failures + 1))
 fi
 
 adb shell am instrument -w -e class 'de.haarvinci.app.AndroidWorkflowTest#c_shareAndClipboardImport' "$instrumentation_runner" 2>&1 | tee test-results/android/import.log
 if ! grep -Fq 'OK (1 test)' test-results/android/import.log || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/import.log; then
   echo 'Android-Teilen-/Zwischenablageprüfung fehlgeschlagen.'
+  test_failures=$((test_failures + 1))
+fi
+
+if [[ "$test_failures" -ne 0 ]]; then
+  echo "$test_failures Android-Funktionsprüfungen sind fehlgeschlagen."
   exit 1
 fi

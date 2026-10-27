@@ -1,12 +1,12 @@
 # Haarvinci
 
-Connys persönliches Kundenbuch für Haarverlängerung und Haarverdichtung. Die erste Version enthält eine vollständig deutsche, auf Smartphones abgestimmte Oberfläche, Anmeldung und Kundenverwaltung mit echter PostgreSQL-Datenbank.
+Connys persönliches Kundenbuch für Haarverlängerung und Haarverdichtung. Die vollständig deutsche Oberfläche enthält Anmeldung, Kundenverwaltung, Haarprofile und kundenbezogene Extensions. Android und Windows speichern lokal in SQLite; die Servervariante nutzt PostgreSQL.
 
 ## Android-Version für das Pixel
 
 Haarvinci wird zusätzlich als eigenständige Android-Test-APK mit lokaler Datenbank gebaut. Installation, Sicherungen, Geräteübernahme und Grenzen der Testsignierung stehen in [docs/ANDROID.md](docs/ANDROID.md). Die APK wird im Workflow „Haarvinci Android-APK prüfen“ auf einem emulierten Pixel installiert und funktional geprüft.
 
-**[Android-Testversion 0.3.0 direkt als APK herunterladen](https://github.com/bockhorn38-creator/haarvinci/releases/download/android-test-v0.3.0/Haarvinci-Android-Test-0.3.0.apk)** (ca. 52 MB, kein ZIP).
+**[Android-Testversion 0.4.0 direkt als APK herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.4.0.apk)** (ca. 52 MB, kein ZIP).
 
 ## Windows-Version für PC und Laptop
 
@@ -21,11 +21,15 @@ Die folgenden bisherigen Startbefehle betreffen die Server-/Entwicklungsversion.
 - Kontakt, optionale Anschrift und Geburtstag, Beratungsdatum und persönliche Notizen.
 - Dauerhafte Speicherung, getrennt von Browser und Webserver; Schutz vor gleichzeitiger Überschreibung.
 - Dashboard mit aus den gespeicherten Kundendaten berechneten Kennzahlen.
-- Einzelne Kundenakten als JSON-Datei exportieren.
+- Optionale strukturierte Haarprofile mit Farben, Struktur, Längen, Dichte und Wünschen.
+- Mehrere kundenbezogene Extensions-Positionen anlegen, bearbeiten und bestätigt löschen; freie Hersteller/Farbcodes, exakte Gesamtpreise und Lieferstatus.
+- Lesbare chronologische Historie mit Vorher-/Nachherwerten und erhaltenen Momentaufnahmen gelöschter Positionen.
+- Extensions-Übersicht mit Kundinnen-/Produktsuche, Lieferstatusfilter und Eingabevorschlägen.
+- Einzelne Kundenakten samt Haarprofil, Extensions und Historie als JSON-Datei exportieren.
 - Lokale PostgreSQL-Sicherungen mit Prüfsummen und Wiederherstellungsprobe.
 - Online-PWA mit App-Symbolen. Keine Kundendaten im Offline-Cache.
 
-Google Kalender, Extensions, Behandlungen, Bestellungen, Zahlungen, Statistiken und KI sind bewusst noch nicht implementiert. Ihre fachlichen Grenzen und die vorgesehenen Erweiterungswege stehen in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
+Google Kalender, Behandlungen, Bestellungen, Zahlungen, Statistiken und KI sind bewusst noch nicht implementiert. Die Extensions-Struktur ist in [docs/EXTENSIONS.md](docs/EXTENSIONS.md) beschrieben. Die fachlichen Grenzen und die vorgesehenen Erweiterungswege der weiteren Module stehen in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 
 ## Starten – Schritt für Schritt
 
@@ -85,6 +89,7 @@ Für den echten Browser-Test zusätzlich die App in einem anderen Terminal start
 
 ```bash
 uv run python tests/browser_smoke.py
+uv run python tests/extensions_browser_smoke.py
 ```
 
 Im vorbereiteten Cloud-System wird das bereits installierte Chromium verwendet. Auf anderen Rechnern Chromium über den Paketmanager bereitstellen und `CHROMIUM_PATH` auf dessen Programmdatei setzen, oder die passende Playwright-Version mit `uv run playwright install chromium` installieren. Ohne `CHROMIUM_PATH` nutzt der Test `/usr/bin/chromium`, sofern vorhanden, sonst Playwrights Browser.

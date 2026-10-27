@@ -31,3 +31,4 @@
 - Extensions-Preise sind Decimal-Gesamtpreise, Mengen beziehen sich auf die Position. Jede Abfrage über customer__owner begrenzen; Kundenzuordnung nie aus POST übernehmen.
 - Positionsänderung und Historienereignis in derselben Transaktion speichern. Versionsprüfung auch bei bestätigter Löschung erhalten; die Historien-Momentaufnahme bleibt danach bestehen.
 - Mobile Oberflächenprüfung: python tests/extensions_browser_smoke.py bei lokal laufender Test-App. Nur fiktive Daten, keine echten Besuche aus Extensions-Anzahl ableiten.
+- Geprüfte Android-APK 0.4.0 und Testnachweise: docs/PRUEFUNG.md. Die Release-Erstellung ist mit der aktuellen Actions-Integration per HTTP 403 gesperrt. Als geprüfter Ersatz liegt die unveränderte APK im separaten Zweig android-test-downloads; direkte URL in docs/ANDROID.md. Keine neuen Builds allein für einen erneuten Download erstellen. Bestehende APK-Dateien/Download-Zweige nicht überschreiben.

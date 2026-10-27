@@ -29,7 +29,7 @@ Die Oberfläche ist deutsch, für Touch ausgelegt, mit unterer Navigation auf Sm
 ## Spätere Erweiterungen – noch nicht implementiert
 
 - `calendar`: offizielle Google-OAuth-Anbindung, serverseitig verschlüsselte Refresh-Tokens, manuelle Zuordnung, eindeutige externe Ereignis-IDs, Wiederholungs-/Konfliktbehandlung. Privattermine nicht anhand von Titel vermuten.
-- `extensions`: Hersteller → herstellerspezifischer Farbcode → Produkt; Methoden als Datensätze. Behandlungen erhalten mehrere Materialpositionen und dokumentierte Mischungen.
+- Optionale spätere Produktvorlagen können häufig verwendete Hersteller-/Farbkombinationen aus dem bereits vorhandenen kundenbezogenen Modul `extensions` wiederverwenden. Eine Lagerverwaltung ist nicht vorgesehen.
 - `treatments`, `orders`: eigene Modelle mit geschützten Verweisen auf Customer. Bestellungen kundenbezogen statt umfassender Lagerverwaltung.
 - `payments`: exakte Dezimalbeträge und getrennte Zahlungs-/Forderungszustände. Nur eingegangene Zahlungen zählen als Zahlungseingang.
 - `reporting`: lesende Abfragen über gespeicherte Daten, eindeutige Definition von Umsatz, Zahlung und Materialkosten.
@@ -46,3 +46,9 @@ Getrennte Einstellungen nutzen gemeinsame Fachmodule: `config.settings` für Pos
 Der erste Start richtet einen persönlichen Zugang ein. Wahlweise werden sechs fiktive Testkundinnen angelegt. Fenster, Sicherungsdialoge, Export, Vergrößerung und Wiederherstellung gehören zur Desktop-Hülle. Sicherungen verwenden einen konsistenten SQLite-Snapshot in einer einzelnen geprüften `.haarvinci`-Datei. Sie enthalten keine Klartextpasswörter. Vor einer Wiederherstellung wird der aktuelle Datenstand zusätzlich gesichert; der eigentliche Austausch erfolgt vor Dienststart und unter Instanzsperre.
 
 PyInstaller bündelt Python, Qt, Django, Waitress, Vorlagen und statische Dateien. Inno Setup erstellt einen deutschen Installer mit Desktop-/Startmenüverknüpfung. Benutzerdaten liegen außerhalb des Installationsordners und bleiben bei einer Deinstallation erhalten. Die Windows-Installation wird auf Windows gebaut und das tatsächlich installierte Programm mit fiktiven Daten geprüft. Der Desktop-Stand benötigt kein Internet; mehrere Geräte werden noch nicht synchronisiert.
+
+## Android und nächste Etappe (0.4)
+
+Die eigenständige Android-Hülle mit Chaquopy und System-WebView verwendet denselben Django-Kern und eine private SQLite-Datenbank. Android benötigt für die Kundenverwaltung keinen Server und keine Internetverbindung. Die oberen Abschnitte zum Hosting beschreiben ausschließlich die ursprüngliche Servervariante.
+
+Kundenverwaltung und kundenbezogene Extensions sind erweitert: optionale strukturierte Haarprofile auf `Customer`, separate `extensions.ExtensionPosition` mit exakten Dezimal-Gesamtpreisen und `customers.CustomerEvent` für chronologische Momentaufnahmen/Vorher-/Nachherwerte. Details, Datumssemantik, Löschhistorie und spätere Verknüpfungen sind in [EXTENSIONS.md](EXTENSIONS.md) beschrieben. Hersteller und Farbcodes bleiben freie Eingaben. Es gibt keine Lagerbestände oder vorbereiteten Zahlungsattrappen.

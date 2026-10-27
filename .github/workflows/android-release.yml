@@ -1,6 +1,8 @@
 name: Vorhandene Android-Test-APK veröffentlichen
 
 on:
+  push:
+    tags: ['publish-android-test-v0.4.0']
   workflow_dispatch:
     inputs:
       source_run:
@@ -9,10 +11,6 @@ on:
         type: string
       source_sha:
         description: Vollständiger Quellcommit des geprüften Builds
-        required: true
-        type: string
-      artifact_id:
-        description: ID des Artefakts Haarvinci-Android-Test-APK
         required: true
         type: string
 
@@ -31,10 +29,12 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       GH_REPO: ${{ github.repository }}
-      SOURCE_RUN: ${{ inputs.source_run }}
-      SOURCE_SHA: ${{ inputs.source_sha }}
+      SOURCE_RUN: ${{ inputs.source_run || '40562980839' }}
+      SOURCE_SHA: ${{ inputs.source_sha || '711b6c9e6d570efef7097ae90778444163928076' }}
       RELEASE_TAG: android-test-v0.4.0
     steps:
+      # Der Veröffentlichungstag wird erst nach erfolgreichem Testlauf gepusht.
+      # Die Vorgaben verweisen auf exakt den geprüften 0.4.0-Quellstand.
       # Bewusst kein Checkout, Gradle oder neuer Build: die bereits geprüften
       # APK-Bytes einschließlich der ursprünglichen Signatur weiterverwenden.
       - name: Erfolgreichen ursprünglichen Testlauf bestätigen
@@ -56,8 +56,8 @@ jobs:
         with:
           github-token: ${{ github.token }}
           repository: ${{ github.repository }}
-          run-id: ${{ inputs.source_run }}
-          artifact-ids: ${{ inputs.artifact_id }}
+          run-id: ${{ env.SOURCE_RUN }}
+          name: Haarvinci-Android-Test-APK
           merge-multiple: true
           path: apk
       - name: Ursprüngliche Prüfsumme, APK und Signatur prüfen

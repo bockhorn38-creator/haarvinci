@@ -14,7 +14,7 @@ from customers.models import Customer
 from customers.services import EditConflict
 
 from .forms import AppointmentForm, TypeForm, berlin_time
-from .models import Appointment, RemoteBusinessEvent
+from .models import Appointment, DeviceBusinessEvent
 from .presentation import connections, day_rows, entries_for_range, midnight, month_days
 from .services import ScheduleConflict, cancel_appointment, conflicts, save_appointment
 
@@ -208,7 +208,7 @@ def appointment_cancel(request, pk):
 @require_GET
 def external_detail(request, pk):
     item = get_object_or_404(
-        RemoteBusinessEvent.objects.filter(connection__owner=request.user), pk=pk
+        DeviceBusinessEvent.objects.filter(connection__owner=request.user), pk=pk
     )
     return render(request, "appointments/external.html", {"nav": "calendar", "item": item})
 

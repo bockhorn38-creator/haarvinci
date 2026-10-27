@@ -228,6 +228,29 @@ class DeviceCalendarTests(TestCase):
         self.assertEqual(self.item.sync_state, "local")
         self.assertEqual(len(self.provider.writes), 1)
 
+    @override_settings(SECURE_SSL_REDIRECT=False)
+    def test_foreign_provider_event_opens_read_only_for_its_owner(self):
+        from django.urls import reverse
+
+        from appointments.models import DeviceBusinessEvent
+
+        event = DeviceBusinessEvent.objects.create(
+            connection=self.connection,
+            occurrence_key="fiktiv:1",
+            title="Fiktive fremde Belegung",
+            start_at=self.item.start_at,
+            end_at=self.item.end_at,
+        )
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("appointments:external", args=[event.pk]))
+        self.assertContains(response, "Fiktive fremde Belegung")
+        self.assertContains(response, "wird hier nicht verändert")
+        self.assertNotContains(response, "Bearbeiten / verschieben")
+        self.client.force_login(self.other)
+        self.assertEqual(
+            self.client.get(reverse("appointments:external", args=[event.pk])).status_code, 404
+        )
+
     def test_customer_rename_is_also_a_local_calendar_change(self):
         binding = self.sync()
         self.customer.first_name = "Nele"

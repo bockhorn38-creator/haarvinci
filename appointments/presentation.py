@@ -72,7 +72,7 @@ def entries_for_range(user, first, last, customer=None):
         ):
             result.append(
                 {
-                    "title": block.title or "Google-Termin",
+                    "title": block.title or "Geschäftlich belegt",
                     "subtitle": "Gerätekalender · schreibgeschützt",
                     "start": block.start_at,
                     "end": block.end_at,

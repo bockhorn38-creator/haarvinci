@@ -5,6 +5,7 @@ import os
 import secrets
 import sys
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -31,6 +32,23 @@ def main():
     user = get_user_model().objects.create_user(
         "import_browser_" + uuid.uuid4().hex[:12], password=(password := secrets.token_urlsafe(24))
     )
+
+    def count(model):
+        from django.db import close_old_connections
+
+        def query():
+            try:
+                return (
+                    model.objects.filter(owner=user).count()
+                    if model is ImportReceipt
+                    else model.objects.for_user(user).count()
+                )
+            finally:
+                close_old_connections()
+
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            return executor.submit(query).result()
+
     screenshots = ROOT / "test-results/import"
     screenshots.mkdir(parents=True, exist_ok=True)
     try:
@@ -56,8 +74,8 @@ def main():
             page.get_by_role("button", name="Vorschau öffnen").click()
             expect(page.get_by_role("heading", name="Deine Importvorschau.")).to_be_visible()
             expect(page.locator("#last_name-errors")).to_contain_text("erforderlich")
-            assert Customer.objects.for_user(user).count() == 0
-            assert ImportReceipt.objects.filter(owner=user).count() == 0
+            assert count(Customer) == 0
+            assert count(ImportReceipt) == 0
             for width in [360, 390, 412, 600, 760, 1024, 1440]:
                 page.set_viewport_size({"width": width, "height": 915})
                 assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), width
@@ -66,32 +84,36 @@ def main():
             page.locator("#id_c0-field-last_name").fill("Fiktivblüte")
             page.get_by_role("button", name="Angaben prüfen").click()
             expect(page.get_by_role("heading", name="Diese Angaben übernehmen?")).to_be_visible()
-            assert Customer.objects.for_user(user).count() == 0
+            assert count(Customer) == 0
             page.screenshot(path=str(screenshots / "bestaetigung-pixel.png"), full_page=True)
             for width in [360, 412, 760, 1440]:
                 page.set_viewport_size({"width": width, "height": 915})
                 assert page.evaluate("document.documentElement.scrollWidth <= innerWidth"), width
             page.get_by_role("button", name="Jetzt verbindlich übernehmen").click()
             expect(page.get_by_role("heading", name="Import bereits übernommen.")).to_be_visible()
-            assert Customer.objects.for_user(user).count() == 1
-            assert ExtensionPosition.objects.for_user(user).count() == 1
-            assert Appointment.objects.for_user(user).count() == 1
-            assert ImportReceipt.objects.filter(owner=user).count() == 1
+            assert count(Customer) == 1
+            assert count(ExtensionPosition) == 1
+            assert count(Appointment) == 1
+            assert count(ImportReceipt) == 1
             receipt = page.url
             page.goto(base + "/uebernehmen/")
             page.get_by_label("Haarvinci-Importtext").fill(json.dumps(payload))
             page.get_by_role("button", name="Vorschau öffnen").click()
             expect(page).to_have_url(receipt)
-            assert Customer.objects.for_user(user).count() == 1
+            assert count(Customer) == 1
             assert not errors, errors
             browser.close()
         print(
             "Import-Oberfläche geprüft: Link-Hinweis, fehlende Pflichtfelder, Korrektur, zwei Vorschauen ohne Speicherung, atomare Bestätigung, Wiederholung ohne Duplikate und sieben Bildschirmbreiten."
         )
     finally:
+        Appointment.objects.for_user(user).delete()
+        Customer.objects.for_user(user).delete()
+        ImportReceipt.objects.filter(owner=user).delete()
+        user_id = user.pk
         user.delete()
         for session in Session.objects.all():
-            if session.get_decoded().get("_auth_user_id") == str(user.pk):
+            if session.get_decoded().get("_auth_user_id") == str(user_id):
                 session.delete()
 
 

@@ -117,7 +117,7 @@ def remote_state(response, fallback):
         return dict(fallback) | {"cancelled": True}
     start, end = parse_instant(value["start"]), parse_instant(value["end"])
     if (
-        response.get("all_day")
+        value.get("all_day")
         or not start < end
         or end - start > timedelta(days=1)
         or len(value.get("notes", "")) > 4000

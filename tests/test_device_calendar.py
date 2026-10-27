@@ -228,6 +228,14 @@ class DeviceCalendarTests(TestCase):
         self.assertEqual(self.item.sync_state, "local")
         self.assertEqual(len(self.provider.writes), 1)
 
+    def test_own_event_converted_to_all_day_is_not_silently_imported(self):
+        binding = self.sync()
+        self.provider.rows[binding.marker.hex]["event"]["all_day"] = True
+        self.sync()
+        self.assertEqual(self.item.sync_state, "conflict")
+        self.assertFalse(self.item.remote_conflict["manageable"])
+        self.assertEqual(len(self.provider.writes), 1)
+
     def test_another_owner_cannot_resolve_or_sync_this_appointment(self):
         binding = self.sync()
         self.provider.rows[binding.marker.hex] = {"status": "missing"}

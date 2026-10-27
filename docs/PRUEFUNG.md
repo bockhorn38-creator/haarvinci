@@ -24,3 +24,15 @@ Lokale Bildschirmfotos liegen unter `test-results/` und enthalten nur fiktive Da
 - Windows-Build, Installer und installierte Desktop-Anwendung werden zusätzlich vom Workflow „Haarvinci für Windows bauen“ geprüft. Der konkrete Windows-Status steht im entsprechenden Workflow-Lauf.
 
 Windows-Prüfung bestätigt: [Workflow-Lauf 40419706517](https://github.com/bockhorn38-creator/haarvinci/actions/runs/40419706517), Quellstand `33046f76589da52f283e9f88a055e3cd36db3adc`, Ergebnis **success**. Die Windows-Tests, Programmbau, deutscher Inno-Setup-Installer, tatsächliche Installation und Funktionsprüfung des installierten Programms wurden erfolgreich abgeschlossen. Das Artefakt `Haarvinci-Windows-Installer` enthält Setup und SHA-256-Prüfsumme. Ein erster Windows-Test hatte noch offene SQLite-Testverbindungen aufgedeckt; nach explizitem Schließen bestehen die Prüfungen auch auf Windows. Die physische Maschine der Benutzerin wurde nicht geprüft.
+
+## Android-Test-APK 0.3
+
+Bestätigter erfolgreicher [Workflow-Lauf 40429678795](https://github.com/bockhorn38-creator/haarvinci/actions/runs/40429678795), Quellstand `c4cc09901adbb2e583bf23deb2e27185d6a8b81f`.
+
+- 31 gemeinsame Django-Prüfungen bestanden; Android-Kern zusätzlich isoliert mit tatsächlicher Sicherung/Rückspielung und Keep-Alive-Abbruch geprüft.
+- Universelles APK für arm64-v8a und x86_64 mit gepinnten Python-Paketen und Paket-Hashes gebaut. Java-Prüfung der lokalen Herkunftsbeschränkung bestanden.
+- Dieselbe gebaute APK auf dem Pixel-6-Emulator unter Android 15 installiert.
+- Ersteinrichtung, privater Cookie-Zugangsschutz, Kundenanlage, Bearbeiten, Neuladen, Suche, echte Android-Dateiauswahl, vollständige Sicherung, Rückspielung mit zusätzlicher Sicherung des vorherigen Stands und erneute Anmeldung geprüft. Der vollständige instrumentierte Ablauf führte einen Test aus und bestand.
+- Anschließend den App-Prozess tatsächlich mit Android beendet. Ein zweiter instrumentierter Test startete die App erneut, meldete sich an und fand die gespeicherte Kundin wieder. Auch dieser Test führte einen Test aus und bestand.
+- APK mit apksigner verifiziert; APK, SHA-256-Prüfsumme und Zertifikatsinformationen als Artefakt `Haarvinci-Android-Test-APK` bereitgestellt.
+- Entwicklungssignierung für eine Testversion; keine Play-Store-Veröffentlichung, keine dauerhaft verwaltete Freigabesignierung und kein Test auf Connys physischem Pixel behauptet.

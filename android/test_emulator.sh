@@ -18,23 +18,23 @@ trap collect_diagnostics EXIT
 # entfernen und damit einen anschließenden echten Prozess-Neustart verhindern.
 apk_path=android/app/build/outputs/apk/debug/app-debug.apk
 test_apk_path=android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
-rg --files --no-ignore android/app/build/outputs/apk -g '*.apk'
-app_package=$("$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk_path" | rg '^package:' | cut -d "'" -f2)
-test_package=$("$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$test_apk_path" | rg '^package:' | cut -d "'" -f2)
+find android/app/build/outputs/apk -type f -name '*.apk'
+app_package=$("$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$apk_path" | grep '^package:' | cut -d "'" -f2)
+test_package=$("$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging "$test_apk_path" | grep '^package:' | cut -d "'" -f2)
 adb install -r "$apk_path"
 adb install -r -t "$test_apk_path"
 adb shell pm list instrumentation
-instrumentation_runner=$(adb shell pm list instrumentation | tr -d '\r' | rg -F "instrumentation:$test_package/" | cut -d ' ' -f1 | sed 's/^instrumentation://')
+instrumentation_runner=$(adb shell pm list instrumentation | tr -d '\r' | grep -F "instrumentation:$test_package/" | cut -d ' ' -f1 | sed 's/^instrumentation://')
 test -n "$instrumentation_runner"
 
 adb shell am instrument -w -e class 'de.haarvinci.app.AndroidWorkflowTest#a_fullWorkflow' "$instrumentation_runner" 2>&1 | tee test-results/android/emulator.log
-if ! rg -q 'OK \(1 test\)' test-results/android/emulator.log || rg -q 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/emulator.log; then
+if ! grep -Fq 'OK (1 test)' test-results/android/emulator.log || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/emulator.log; then
   echo 'Der vollständige Android-Test wurde nicht erfolgreich abgeschlossen.'
   exit 1
 fi
 adb shell am force-stop "$app_package"
 adb shell am instrument -w -e class 'de.haarvinci.app.AndroidWorkflowTest#b_persistenceAfterProcessRestart' "$instrumentation_runner" 2>&1 | tee test-results/android/restart.log
-if ! rg -q 'OK \(1 test\)' test-results/android/restart.log || rg -q 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/restart.log; then
+if ! grep -Fq 'OK (1 test)' test-results/android/restart.log || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/restart.log; then
   echo 'Die Android-Neustartprüfung wurde nicht erfolgreich abgeschlossen.'
   exit 1
 fi

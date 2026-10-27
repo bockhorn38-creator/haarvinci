@@ -84,7 +84,12 @@ public class AndroidWorkflowTest {
     private void menu(String label) throws Exception {
         scenario.onActivity(activity -> activity.openOptionsMenu());
         UiObject2 item = device.wait(Until.findObject(By.text(label)), 10000);
-        assertNotNull("Programmmenü fehlt: " + label, item);
+        if (item == null) {
+            screenshot("android-menue-fehler.png");
+            java.io.ByteArrayOutputStream hierarchy = new java.io.ByteArrayOutputStream();
+            device.dumpWindowHierarchy(hierarchy);
+            throw new AssertionError("Programmmenü fehlt: " + label + "; UI: " + hierarchy.toString("UTF-8"));
+        }
         item.click();
     }
     private void signIn() throws Exception {

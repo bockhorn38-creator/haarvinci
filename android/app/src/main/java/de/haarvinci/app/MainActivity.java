@@ -168,12 +168,13 @@ public final class MainActivity extends Activity {
         }
 
         @Override public void onPageFinished(WebView view, String url) {
+            boolean previouslyFirstRun = firstRun;
             firstRun = OriginPolicy.isInternal(runtime.origin, url) && "/einrichten/".equals(Uri.parse(url).getPath());
             view.evaluateJavascript("document.body && document.body.dataset.authenticated === 'true'", value -> {
                 boolean wasAuthenticated = authenticated;
                 authenticated = "true".equals(value) && OriginPolicy.isInternal(runtime.origin, url);
                 if (wasAuthenticated && !authenticated) web.clearHistory();
-                invalidateOptionsMenu();
+                if (wasAuthenticated != authenticated || previouslyFirstRun != firstRun) invalidateOptionsMenu();
                 if (authenticated) drainSharedText();
                 view.evaluateJavascript("document.body && document.body.dataset.deviceCalendarEnabled === 'true'", enabled -> {
                     deviceEnabled = "true".equals(enabled);

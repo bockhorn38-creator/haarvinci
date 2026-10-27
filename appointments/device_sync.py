@@ -399,6 +399,7 @@ def sync_all(bridge, user=None):
         return {
             "message": "Geräteabgleich abgeschlossen. Der Google-Abgleich erfolgt separat durch Android.",
             "retry": retry,
+            "enabled": active_connections(user).exists(),
         }
     finally:
         LOCK.release()

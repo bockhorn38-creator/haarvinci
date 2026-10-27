@@ -18,7 +18,6 @@ import org.json.JSONObject;
 public final class CalendarSyncWorker extends Worker {
     public CalendarSyncWorker(@NonNull Context context, @NonNull WorkerParameters parameters) { super(context, parameters); }
     public static void schedule(Context context) {
-        if (context.checkSelfPermission(android.Manifest.permission.READ_CALENDAR) != android.content.pm.PackageManager.PERMISSION_GRANTED) return;
         Constraints constraints = new Constraints.Builder().build();
         WorkManager manager = WorkManager.getInstance(context);
         manager.enqueueUniqueWork("haarvinci-device-pending", ExistingWorkPolicy.APPEND_OR_REPLACE,
@@ -35,6 +34,7 @@ public final class CalendarSyncWorker extends Worker {
             app.worker.execute(() -> {
                 try {
                     JSONObject report = new JSONObject(app.call("device_background").toString());
+                    if (report.has("enabled") && !report.optBoolean("enabled")) WorkManager.getInstance(app).cancelUniqueWork("haarvinci-device-periodic");
                     result.set(report.optBoolean("retry") ? Result.retry() : Result.success());
                 } catch (Exception ignored) { result.set(Result.retry()); }
                 finally { done.countDown(); }

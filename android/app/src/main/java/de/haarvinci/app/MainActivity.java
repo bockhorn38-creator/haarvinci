@@ -227,6 +227,8 @@ public final class MainActivity extends Activity {
         }
         application.pendingImport = text;
         application.pendingImportAt = android.os.SystemClock.elapsedRealtime();
+        long sharedAt = application.pendingImportAt;
+        application.main.postDelayed(() -> { if (application.pendingImportAt == sharedAt) application.pendingImport = null; }, 30L * 60 * 1000);
     }
     private void pasteImport() {
         // Ausschließlich eine ausdrückliche native Nutzeraktion liest die Zwischenablage.

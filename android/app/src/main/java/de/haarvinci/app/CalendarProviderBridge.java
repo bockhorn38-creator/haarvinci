@@ -198,7 +198,7 @@ public final class CalendarProviderBridge {
         Uri.Builder builder = Instances.CONTENT_URI.buildUpon(); ContentUris.appendId(builder, start); ContentUris.appendId(builder, end);
         String[] projection = privateRole ? new String[]{Instances.BEGIN, Instances.END, Instances.ALL_DAY} : new String[]{Instances.BEGIN, Instances.END, Instances.ALL_DAY, Instances.EVENT_ID, Instances.TITLE};
         JSONArray rows = new JSONArray();
-        try (Cursor cursor = query(builder.build(), projection, Instances.CALENDAR_ID + "=? AND " + Instances.DELETED + "=0 AND (" + Instances.STATUS + " IS NULL OR " + Instances.STATUS + "!=2) AND (" + Instances.AVAILABILITY + " IS NULL OR " + Instances.AVAILABILITY + "!=1)", new String[]{id})) {
+        try (Cursor cursor = query(builder.build(), projection, Instances.CALENDAR_ID + "=? AND " + Events.DELETED + "=0 AND (" + Instances.STATUS + " IS NULL OR " + Instances.STATUS + "!=2) AND (" + Instances.AVAILABILITY + " IS NULL OR " + Instances.AVAILABILITY + "!=1)", new String[]{id})) {
             while (cursor.moveToNext()) {
                 boolean allDay = cursor.getInt(2) == 1;
                 if (!privateRole && skip.contains(cursor.getString(3))) continue;

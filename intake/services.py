@@ -65,7 +65,17 @@ def prepare(user, session, text):
             DRAFTS.pop(old.key, None)
         draft = Draft(user.pk, session, payload, digest)
         DRAFTS[draft.key] = draft
+        timer = threading.Timer(TTL, expire, args=[draft])
+        timer.daemon = True
+        timer.start()
     return draft, None
+
+
+def expire(draft):
+    with draft.lock, LOCK:
+        if time.monotonic() - draft.created >= TTL:
+            DRAFTS.pop(draft.key, None)
+            draft.payload, draft.plan, draft.edited = {}, None, None
 
 
 def find(key, user, session):
@@ -192,14 +202,18 @@ def review(draft, user, posted=None):
             last = cleaned.get("last_name", "").casefold()
             phone = "".join(c for c in cleaned.get("phone", "") if c.isdigit())
             email = cleaned.get("email", "").casefold()
-            customer_signature = canonical([first, last, phone, email])
-            if customer_signature in new_customers:
+            customer_signature = {"name:" + canonical([first, last])}
+            if phone:
+                customer_signature.add("phone:" + phone)
+            if email:
+                customer_signature.add("email:" + email)
+            if customer_signature & new_customers:
                 display_form.add_error(
                     None,
                     "Diese neue Kundin kommt im Import doppelt vor. Bitte nur eine Kundenreferenz verwenden.",
                 )
                 valid = False
-            new_customers.add(customer_signature)
+            new_customers.update(customer_signature)
             matches = [
                 person
                 for person in Customer.objects.for_user(user).only(
@@ -302,7 +316,7 @@ def review(draft, user, posted=None):
                         valid = False
                 signature = canonical(
                     [
-                        incoming["customer_ref"],
+                        str(customer.pk) if customer else incoming["customer_ref"],
                         {
                             key: value
                             for key, value in clean.items()

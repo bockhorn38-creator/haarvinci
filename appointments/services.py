@@ -7,7 +7,15 @@ from django.utils import timezone
 from customers.models import CustomerEvent
 from customers.services import EditConflict
 
-from .models import Appointment, CalendarConnection, PrivateBusy, RemoteBusinessEvent
+from .models import (
+    Appointment,
+    CalendarConnection,
+    DeviceBusinessEvent,
+    DeviceCalendarConnection,
+    DevicePrivateBusy,
+    PrivateBusy,
+    RemoteBusinessEvent,
+)
 
 EDITABLE = [
     "customer",
@@ -43,6 +51,8 @@ def conflicts(*, user, start, end, buffer=0, exclude=None):
     for model, label in [
         (PrivateBusy, "Privat belegt"),
         (RemoteBusinessEvent, "Google geschäftlich belegt"),
+        (DevicePrivateBusy, "Privat belegt"),
+        (DeviceBusinessEvent, "Geschäftlicher Gerätekalender belegt"),
     ]:
         for block in model.objects.filter(
             connection__owner=user, start_at__lt=until, end_at__gt=start
@@ -147,6 +157,10 @@ def save_appointment(*, user, data, appointment_id=None):
         or CalendarConnection.objects.filter(owner=user, role="business")
         .exclude(calendar_id="")
         .exists()
+        or DeviceCalendarConnection.objects.for_user(user)
+        .filter(role="business")
+        .exclude(state="disconnected")
+        .exists()
         else Appointment.Sync.LOCAL
     )
     item.save()
@@ -179,7 +193,15 @@ def cancel_appointment(*, user, appointment_id, version):
         before = snapshot(item)
         item.status = Appointment.Status.CANCELLED
         item.version += 1
-        item.sync_state = Appointment.Sync.PENDING if item.google_event_id else item.sync_state
+        item.sync_state = (
+            Appointment.Sync.PENDING
+            if item.google_event_id
+            or DeviceCalendarConnection.objects.for_user(user)
+            .filter(role="business")
+            .exclude(state="disconnected")
+            .exists()
+            else item.sync_state
+        )
         item.save()
         audit(item, user, before)
     return item

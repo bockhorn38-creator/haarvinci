@@ -5,7 +5,6 @@ import androidx.annotation.NonNull;
 import androidx.work.Constraints;
 import androidx.work.ExistingPeriodicWorkPolicy;
 import androidx.work.ExistingWorkPolicy;
-import androidx.work.NetworkType;
 import androidx.work.OneTimeWorkRequest;
 import androidx.work.PeriodicWorkRequest;
 import androidx.work.WorkManager;
@@ -16,15 +15,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.json.JSONObject;
 
-public final class GoogleSyncWorker extends Worker {
-    public GoogleSyncWorker(@NonNull Context context, @NonNull WorkerParameters parameters) { super(context, parameters); }
+public final class CalendarSyncWorker extends Worker {
+    public CalendarSyncWorker(@NonNull Context context, @NonNull WorkerParameters parameters) { super(context, parameters); }
     public static void schedule(Context context) {
-        Constraints constraints = new Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build();
+        if (context.checkSelfPermission(android.Manifest.permission.READ_CALENDAR) != android.content.pm.PackageManager.PERMISSION_GRANTED) return;
+        Constraints constraints = new Constraints.Builder().build();
         WorkManager manager = WorkManager.getInstance(context);
-        manager.enqueueUniqueWork("haarvinci-google-pending", ExistingWorkPolicy.KEEP,
-            new OneTimeWorkRequest.Builder(GoogleSyncWorker.class).setConstraints(constraints).build());
-        manager.enqueueUniquePeriodicWork("haarvinci-google-periodic", ExistingPeriodicWorkPolicy.KEEP,
-            new PeriodicWorkRequest.Builder(GoogleSyncWorker.class, 15, TimeUnit.MINUTES).setConstraints(constraints).build());
+        manager.enqueueUniqueWork("haarvinci-device-pending", ExistingWorkPolicy.APPEND_OR_REPLACE,
+            new OneTimeWorkRequest.Builder(CalendarSyncWorker.class).setConstraints(constraints).build());
+        manager.enqueueUniquePeriodicWork("haarvinci-device-periodic", ExistingPeriodicWorkPolicy.KEEP,
+            new PeriodicWorkRequest.Builder(CalendarSyncWorker.class, 15, TimeUnit.MINUTES).setConstraints(constraints).build());
     }
     @NonNull @Override public Result doWork() {
         HaarvinciApplication app = (HaarvinciApplication) getApplicationContext();
@@ -34,7 +34,7 @@ public final class GoogleSyncWorker extends Worker {
             if (error != null) { done.countDown(); return; }
             app.worker.execute(() -> {
                 try {
-                    JSONObject report = new JSONObject(app.call("google_background", getApplicationContext()).toString());
+                    JSONObject report = new JSONObject(app.call("device_background").toString());
                     result.set(report.optBoolean("retry") ? Result.retry() : Result.success());
                 } catch (Exception ignored) { result.set(Result.retry()); }
                 finally { done.countDown(); }

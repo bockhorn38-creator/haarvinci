@@ -10,6 +10,7 @@ on:
       - 'customers/**'
       - 'extensions/**'
       - 'appointments/**'
+      - 'intake/**'
       - 'core/**'
       - 'templates/**'
       - 'static/**'

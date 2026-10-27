@@ -202,7 +202,7 @@ public class AndroidWorkflowTest {
                 screenshot("android-kalender-" + mode + ".png");
             }
             open("/kalender/google/");
-            waitFor("/kalender/google/", "Google ist noch nicht eingerichtet");
+            waitFor("/kalender/google/", "Kalender auf deinem Pixel");
             android.content.Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
             GoogleVault.save(context, "fiktive-testbindung", "fiktiver-native-zugangstoken");
             assertEquals("fiktiver-native-zugangstoken", GoogleVault.load(context, "fiktive-testbindung"));
@@ -305,4 +305,61 @@ public class AndroidWorkflowTest {
             screenshot("android-nach-neustart.png");
         }
     }
+    @Test public void c_shareAndClipboardImport() throws Exception {
+        android.content.Context context = InstrumentationRegistry.getInstrumentation().getTargetContext();
+        String day = java.time.LocalDate.now(java.time.ZoneId.of("Europe/Berlin")).plusDays(10).toString();
+        JSONObject person = new JSONObject().put("ref", "k1").put("mode", "new").put("data", new JSONObject().put("first_name", "Lina").put("last_name", "Fiktivimport").put("email", "lina.android-import@example.com").put("natural_color", "Dunkelblond").put("desired_length", "50,5"));
+        JSONObject extension = new JSONObject().put("customer_ref", "k1").put("data", new JSONObject().put("manufacturer", "Fiktivimport Atelier").put("extension_type", "Tape-Ins").put("color", "Blond").put("length_cm", "50,5").put("weight_g", "100,25").put("purchase_price", "149,90").put("assigned_on", day));
+        JSONObject appointment = new JSONObject().put("customer_ref", "k1").put("data", new JSONObject().put("appointment_type", "Erstberatung").put("day", day).put("begin", "10:00").put("finish", "11:00").put("status", "planned").put("buffer_minutes", "15"));
+        String payload = new JSONObject().put("format", "haarvinci.import").put("version", 1).put("id", java.util.UUID.randomUUID().toString()).put("customers", new org.json.JSONArray().put(person)).put("extensions", new org.json.JSONArray().put(extension)).put("appointments", new org.json.JSONArray().put(appointment)).toString();
+        android.content.Intent share = new android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain").putExtra(android.content.Intent.EXTRA_TEXT, payload).setClass(context, MainActivity.class).addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+        android.content.Intent implicit = new android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain").setPackage(context.getPackageName());
+        assertNotNull("Teilen-Empfänger ist nicht registriert", context.getPackageManager().resolveActivity(implicit, 0));
+        try (ActivityScenario<MainActivity> active = ActivityScenario.launch(share)) {
+            scenario = active;
+            String draft = waitForText("Deine Importvorschau");
+            assertTrue(draft.startsWith("/uebernehmen/vorschau/"));
+            assertTrue(state().getString("text").contains("NOCH NICHT GESPEICHERT"));
+            screenshot("android-chatgpt-vorschau.png");
+            open("/kundinnen/?q=Fiktivimport");
+            waitFor("/kundinnen/", "0 Ergebnisse");
+            open(draft);
+            waitFor(draft, "Deine Importvorschau");
+            js("document.querySelector('input[name=action]').form.requestSubmit();");
+            waitFor(draft, "Jetzt verbindlich übernehmen");
+            screenshot("android-chatgpt-bestaetigung.png");
+            js("document.querySelector('input[name=confirmation]').form.requestSubmit();");
+            String receipt = waitForText("Import bereits übernommen");
+            assertTrue(receipt.startsWith("/uebernehmen/ergebnis/"));
+            open("/kundinnen/?q=Fiktivimport");
+            waitFor("/kundinnen/", "1 Ergebnis");
+            js("document.querySelector('.customer-card').click();");
+            waitForText("Fiktivimport Atelier");
+            assertTrue(state().getString("text").contains("50,5 cm"));
+            screenshot("android-chatgpt-ergebnis.png");
+            // Zwischenablage darf erst bei bewusster Menüaktion gelesen werden.
+            scenario.onActivity(activity -> ((android.content.ClipboardManager) activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("Fiktiver Haarvinci-Import", payload)));
+            menu("Aus ChatGPT einfügen");
+            waitFor(receipt, "Import bereits übernommen");
+            open("/kundinnen/?q=Fiktivimport");
+            waitFor("/kundinnen/", "1 Ergebnis");
+            scenario.onActivity(activity -> activity.onNewIntent(new android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain").putExtra(android.content.Intent.EXTRA_TEXT, "https://chatgpt.com/share/fiktiver-testlink")));
+            UiObject2 linkHint = device.wait(Until.findObject(By.textContains("Geteilt wurde nur ein Link")), 15000);
+            assertNotNull("Link-Fallback fehlt", linkHint);
+            device.findObject(By.res("android:id/button1")).click();
+            scenario.onActivity(activity -> ((android.content.ClipboardManager) activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("Fiktives unvollständiges Paket", "{\"format\":\"haarvinci.import\",\"version\":1,\"id\":\"" + java.util.UUID.randomUUID() + "\",\"customers\":[{\"ref\":\"k1\",\"mode\":\"new\",\"data\":{\"first_name\":\"Unvollständig\"}}]}")));
+            menu("Aus ChatGPT einfügen");
+            waitForText("Deine Importvorschau");
+            assertTrue(state().getString("text").contains("Dieses Feld ist zwingend erforderlich"));
+            open("/konto/");
+            waitFor("/konto/", "Sicher abmelden");
+            js("document.querySelector('form[action=\"/abmelden/\"]').requestSubmit();");
+            waitFor("/anmelden/", "Kundenbuch öffnen");
+            scenario.onActivity(activity -> activity.onNewIntent(new android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain").putExtra(android.content.Intent.EXTRA_TEXT, payload)));
+            waitFor("/anmelden/", "Kundenbuch öffnen");
+            fill(new JSONObject().put("username", USER).put("password", PASSWORD));
+            waitFor(receipt, "Import bereits übernommen");
+        }
+    }
+
 }

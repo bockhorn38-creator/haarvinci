@@ -48,7 +48,7 @@ public final class MainActivity extends Activity {
     private ProgressBar progress;
     private File pendingExport;
     private boolean authenticated;
-    private boolean googleEnabled;
+    private boolean deviceEnabled;
     private boolean firstRun;
     private final Handler timer = new Handler(Looper.getMainLooper());
     volatile Uri lastExport;
@@ -62,6 +62,7 @@ public final class MainActivity extends Activity {
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         application = (HaarvinciApplication) getApplication();
+        receiveSharedText(getIntent());
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setBackgroundColor(Color.rgb(248, 246, 242));
@@ -149,7 +150,8 @@ public final class MainActivity extends Activity {
             if (OriginPolicy.isInternal(runtime.origin, url)) return false;
             if (request.hasGesture() && request.isForMainFrame() && OriginPolicy.isInternal(runtime.origin, view.getUrl())) {
                 if ("haarvinci".equals(request.getUrl().getScheme())) {
-                    if (request.getUrl().getHost() != null && request.getUrl().getHost().startsWith("google-") && authenticated) googleLink(request.getUrl());
+                    if (request.getUrl().getHost() != null && request.getUrl().getHost().startsWith("device-") && authenticated) deviceLink(request.getUrl());
+                    if ("import-clipboard".equals(request.getUrl().getHost()) && authenticated) pasteImport();
                     if ("backup".equals(request.getUrl().getHost()) && authenticated) createBackup();
                     if ("restore".equals(request.getUrl().getHost()) && (authenticated || firstRun)) chooseRestore();
                 } else if ("tel".equals(request.getUrl().getScheme()) || "mailto".equals(request.getUrl().getScheme())) {
@@ -172,9 +174,10 @@ public final class MainActivity extends Activity {
                 authenticated = "true".equals(value) && OriginPolicy.isInternal(runtime.origin, url);
                 if (wasAuthenticated && !authenticated) web.clearHistory();
                 invalidateOptionsMenu();
-                view.evaluateJavascript("document.body && document.body.dataset.googleEnabled === 'true'", enabled -> {
-                    googleEnabled = "true".equals(enabled);
-                    if (authenticated && googleEnabled) GoogleSyncWorker.schedule(MainActivity.this);
+                if (authenticated) drainSharedText();
+                view.evaluateJavascript("document.body && document.body.dataset.deviceCalendarEnabled === 'true'", enabled -> {
+                    deviceEnabled = "true".equals(enabled);
+                    if (authenticated && deviceEnabled) { application.observeCalendars(); CalendarSyncWorker.schedule(MainActivity.this); }
                 });
             });
         }
@@ -184,14 +187,17 @@ public final class MainActivity extends Activity {
         menu.add(0, BACKUP, 0, "Datensicherung erstellen");
         menu.add(0, RESTORE, 1, "Sicherung wiederherstellen");
         menu.add(0, 3, 2, "Über Haarvinci");
+        menu.add(0, 4, 3, "Aus ChatGPT einfügen");
         return true;
     }
     @Override public boolean onPrepareOptionsMenu(Menu menu) {
         menu.findItem(BACKUP).setEnabled(authenticated);
+        menu.findItem(4).setEnabled(authenticated);
         menu.findItem(RESTORE).setEnabled(authenticated || firstRun);
         return super.onPrepareOptionsMenu(menu);
     }
     @Override public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == 4 && authenticated) { pasteImport(); return true; }
         if (item.getItemId() == BACKUP && authenticated) { createBackup(); return true; }
         if (item.getItemId() == RESTORE && (authenticated || firstRun)) { chooseRestore(); return true; }
         if (item.getItemId() == 3) {
@@ -201,69 +207,139 @@ public final class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void googleLink(Uri uri) {
-        String host = uri.getHost();
-        String action = host.substring("google-".length());
-        if (!java.util.Arrays.asList("connect", "finish", "calendars", "sync", "disconnect", "resolve").contains(action)) return;
-        JSONObject arguments = new JSONObject();
-        try {
-            for (String key : uri.getQueryParameterNames()) arguments.put(key, uri.getQueryParameter(key));
-        } catch (Exception error) { showError("Die Google-Aktion ist ungültig."); return; }
+    @Override protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        receiveSharedText(intent);
+        if (authenticated) drainSharedText();
+    }
+    private void receiveSharedText(Intent intent) {
+        if (intent == null || !Intent.ACTION_SEND.equals(intent.getAction()) || !"text/plain".equals(intent.getType())) return;
+        CharSequence value = null;
+        try { value = intent.getCharSequenceExtra(Intent.EXTRA_TEXT); }
+        catch (RuntimeException invalid) { /* Unvertraute Extras nicht weiterverarbeiten. */ }
+        intent.removeExtra(Intent.EXTRA_TEXT);
+        intent.setClipData(null);
+        if (value == null) { Toast.makeText(this, "Kein Antworttext enthalten. Bitte den vollständigen ChatGPT-Antworttext kopieren und in Haarvinci einfügen.", Toast.LENGTH_LONG).show(); return; }
+        String text = value.toString();
+        if (text.length() > 65536 || text.getBytes(StandardCharsets.UTF_8).length > 65536) {
+            Toast.makeText(this, "Der Import ist zu groß. Bitte höchstens 64 KiB Text teilen.", Toast.LENGTH_LONG).show(); return;
+        }
+        application.pendingImport = text;
+        application.pendingImportAt = android.os.SystemClock.elapsedRealtime();
+    }
+    private void pasteImport() {
+        // Ausschließlich eine ausdrückliche native Nutzeraktion liest die Zwischenablage.
+        android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        android.content.ClipData clip = clipboard.getPrimaryClip();
+        CharSequence value = clip != null && clip.getItemCount() > 0 ? clip.getItemAt(0).getText() : null;
+        if (value == null || value.length() == 0) { showError("Kein Text in der Zwischenablage. Bitte in ChatGPT die vollständige Importantwort kopieren."); return; }
+        importText(value.toString());
+    }
+    private void drainSharedText() {
+        String text = application.pendingImport;
+        if (text == null || importBusy) return;
+        application.pendingImport = null;
+        if (android.os.SystemClock.elapsedRealtime() - application.pendingImportAt > 30L * 60 * 1000) { showError("Der geteilte Text ist abgelaufen. Bitte erneut teilen."); return; }
+        importText(text);
+    }
+    private boolean importBusy;
+    private void importText(String text) {
+        if (!authenticated || runtime == null || web == null || importBusy) return;
+        if (text.length() > 65536 || text.getBytes(StandardCharsets.UTF_8).length > 65536) { showError("Der Import darf höchstens 64 KiB Text enthalten."); return; }
+        importBusy = true;
+        String cookies = CookieManager.getInstance().getCookie(runtime.origin);
+        application.worker.execute(() -> {
+            try {
+                JSONObject result = new JSONObject(application.call("prepare_import", cookies == null ? "" : cookies, text).toString());
+                runOnUiThread(() -> {
+                    importBusy = false;
+                    if (isFinishing() || isDestroyed() || !authenticated || !cookieValue(cookies, "haarvinci_desktop_session").equals(cookieValue(CookieManager.getInstance().getCookie(runtime.origin), "haarvinci_desktop_session"))) return;
+                    String path = result.optString("path");
+                    if (path.startsWith("/uebernehmen/") && !path.contains("?")) web.loadUrl(runtime.origin + path);
+                    else showError(result.optString("message", "Der Import konnte nicht vorbereitet werden."));
+                });
+            } catch (Exception error) { runOnUiThread(() -> { importBusy = false; showError("Der Import konnte nicht vorbereitet werden. Bitte den Text erneut einfügen."); }); }
+        });
+    }
+
+    private String pendingCalendarRole;
+    private boolean deviceBusy;
+    private void deviceLink(Uri uri) {
+        String action = uri.getHost().substring("device-".length());
+        if ("permissions".equals(action)) {
+            startActivity(new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + getPackageName()))); return;
+        }
+        if ("accounts".equals(action)) { startActivity(new Intent(android.provider.Settings.ACTION_SYNC_SETTINGS)); return; }
+        JSONObject data = new JSONObject();
+        try { for (String key : uri.getQueryParameterNames()) data.put(key, uri.getQueryParameter(key)); }
+        catch (Exception error) { showError("Die Kalender-Aktion ist ungültig."); return; }
+        if ("select".equals(action)) {
+            String role = data.optString("role");
+            if (!role.equals("business") && !role.equals("private")) return;
+            if (checkSelfPermission(android.Manifest.permission.READ_CALENDAR) != android.content.pm.PackageManager.PERMISSION_GRANTED || (role.equals("business") && checkSelfPermission(android.Manifest.permission.WRITE_CALENDAR) != android.content.pm.PackageManager.PERMISSION_GRANTED)) {
+                pendingCalendarRole = role;
+                requestPermissions(role.equals("business") ? new String[]{android.Manifest.permission.READ_CALENDAR, android.Manifest.permission.WRITE_CALENDAR} : new String[]{android.Manifest.permission.READ_CALENDAR}, 31);
+                return;
+            }
+        }
         if ("disconnect".equals(action) || "resolve".equals(action)) {
-            String message = "disconnect".equals(action)
-                ? "Die Verbindung wird auf diesem Gerät getrennt. Termine in Google werden nicht gelöscht."
-                : "Diesen Konflikt mit dem gewählten Stand auflösen? Bei Auswahl des lokalen Stands wird der eigene Haarvinci-Google-Termin aktualisiert oder bei Bedarf neu angelegt.";
-            new AlertDialog.Builder(this).setTitle("Bitte Entscheidung bestätigen").setMessage(message)
-                .setNegativeButton("Abbrechen", null).setPositiveButton("Bestätigen", (dialog, which) -> googleAction(action, arguments, false)).show();
-        } else googleAction(action, arguments, false);
+            new AlertDialog.Builder(this).setTitle("Entscheidung bestätigen")
+                .setMessage("disconnect".equals(action) ? "Die Geräteverbindung wird getrennt. Bereits übertragene Termine bleiben im Gerätekalender erhalten." : "Den gewählten Stand übernehmen? Bei fehlender Zuordnung wird kein Ersatztermin automatisch angelegt.")
+                .setNegativeButton("Abbrechen", null).setPositiveButton("Bestätigen", (dialog, which) -> deviceAction(action, data)).show();
+        } else deviceAction(action, data);
+    }
+    @Override public void onRequestPermissionsResult(int code, String[] names, int[] grants) {
+        super.onRequestPermissionsResult(code, names, grants);
+        if (code != 31) return;
+        String role = pendingCalendarRole; pendingCalendarRole = null;
+        if (role == null) return;
+        if (checkSelfPermission(android.Manifest.permission.READ_CALENDAR) == android.content.pm.PackageManager.PERMISSION_GRANTED && (!role.equals("business") || checkSelfPermission(android.Manifest.permission.WRITE_CALENDAR) == android.content.pm.PackageManager.PERMISSION_GRANTED)) {
+            try { deviceAction("select", new JSONObject().put("role", role)); } catch (Exception ignored) { }
+        } else { showError("Die benötigte Kalenderberechtigung wurde nicht erteilt. Der lokale Haarvinci-Kalender bleibt nutzbar. Du kannst die Freigabe später unter App-Berechtigungen ändern."); if (web != null) web.reload(); }
     }
     private static String cookieValue(String cookies, String name) {
         if (cookies == null) return "";
-        for (String item : cookies.split(";")) {
-            String value = item.trim();
-            if (value.startsWith(name + "=")) return value.substring(name.length() + 1);
-        }
+        for (String item : cookies.split(";")) { String value = item.trim(); if (value.startsWith(name + "=")) return value.substring(name.length() + 1); }
         return "";
     }
-    private boolean googleBusy;
-    private void googleAction(String action, JSONObject arguments, boolean quiet) {
-        if (!authenticated || runtime == null || web == null || googleBusy) return;
-        googleBusy = true;
+    private void deviceAction(String action, JSONObject data) {
+        if (!java.util.Arrays.asList("select", "choose", "sync", "disconnect", "resolve").contains(action) || !authenticated || runtime == null || web == null || deviceBusy) return;
+        deviceBusy = true;
         String cookies = CookieManager.getInstance().getCookie(runtime.origin);
-        String previousPage = web.getUrl();
+        String page = web.getUrl();
         application.worker.execute(() -> {
             try {
-                JSONObject result = new JSONObject(application.call("google_action", cookies == null ? "" : cookies, action, arguments.toString(), getApplicationContext()).toString());
+                JSONObject result = new JSONObject(application.call("device_action", cookies == null ? "" : cookies, action, data.toString()).toString());
                 runOnUiThread(() -> {
-                    googleBusy = false;
-                    if (isFinishing() || isDestroyed() || !authenticated || web == null || !cookieValue(cookies, "haarvinci_desktop_session").equals(cookieValue(CookieManager.getInstance().getCookie(runtime.origin), "haarvinci_desktop_session"))) return;
+                    deviceBusy = false;
+                    if (isFinishing() || isDestroyed() || !authenticated || !cookieValue(cookies, "haarvinci_desktop_session").equals(cookieValue(CookieManager.getInstance().getCookie(runtime.origin), "haarvinci_desktop_session"))) return;
                     try {
-                        if (result.has("browser_url")) {
-                            Uri login = Uri.parse(result.getString("browser_url"));
-                            if (!"https".equals(login.getScheme()) || !"accounts.google.com".equals(login.getHost()) || login.getUserInfo() != null) throw new IllegalArgumentException();
-                            startActivity(new Intent(Intent.ACTION_VIEW, login).addCategory(Intent.CATEGORY_BROWSABLE));
-                        } else if (result.has("calendars")) {
+                        if (result.has("calendars")) {
                             org.json.JSONArray calendars = result.getJSONArray("calendars");
-                            if (calendars.length() == 0) { showError("Kein geeigneter Kalender gefunden. Geschäftlich ist ein eigener Kalender erforderlich."); return; }
-                            String[] names = new String[calendars.length()];
-                            for (int i=0; i<names.length; i++) names[i] = calendars.getJSONObject(i).getString("title");
-                            new AlertDialog.Builder(this).setTitle("Google-Kalender auswählen").setItems(names, (dialog, index) -> {
-                                try { googleAction("choose", new JSONObject().put("role", result.getString("role")).put("calendar_id", calendars.getJSONObject(index).getString("id")), false); }
-                                catch (Exception error) { showError("Der Kalender konnte nicht ausgewählt werden."); }
+                            if (calendars.length() == 0) { showError("Kein geeigneter eingerichteter Kalender gefunden. Bitte einen Kalender in Android aktivieren. Geschäftlich ist ein beschreibbarer Kalender nötig."); return; }
+                            String[] labels = new String[calendars.length()];
+                            for (int i=0; i<labels.length; i++) labels[i] = calendars.getJSONObject(i).getString("label");
+                            new AlertDialog.Builder(this).setTitle("Gerätekalender auswählen").setItems(labels, (dialog, index) -> {
+                                try {
+                                    JSONObject selected = new JSONObject().put("role", result.getString("role")).put("calendar_id", calendars.getJSONObject(index).getString("id"));
+                                    new AlertDialog.Builder(this).setTitle("Kalender verwenden?").setMessage(result.getString("role").equals("business") ? "Aktive Haarvinci-Termine werden diesem Kalender zugeordnet: Kundinnenname, Terminart, Zeiten und Terminnotizen. Andere Termine bleiben schreibgeschützt." : "Dieser Kalender wird ausschließlich für Belegt-Zeiten gelesen. Private Inhalte werden nicht übernommen.")
+                                        .setNegativeButton("Abbrechen", null).setPositiveButton("Verwenden", (confirm, which) -> deviceAction("choose", selected)).show();
+                                } catch (Exception ignored) { showError("Kalenderauswahl nicht möglich."); }
                             }).setNegativeButton("Abbrechen", null).show();
                         } else {
-                            if (!quiet) Toast.makeText(this, result.optString("message", "Google-Verbindung geprüft."), Toast.LENGTH_LONG).show();
-                            if (!quiet && previousPage != null && previousPage.equals(web.getUrl()) && OriginPolicy.isInternal(runtime.origin, previousPage)) web.reload();
+                            Toast.makeText(this, result.optString("message", "Geräteabgleich geprüft."), Toast.LENGTH_LONG).show();
+                            if (page != null && page.equals(web.getUrl())) web.reload();
+                            if (result.optBoolean("schedule") || deviceEnabled) { application.observeCalendars(); CalendarSyncWorker.schedule(this); }
                         }
-                        if (googleEnabled) GoogleSyncWorker.schedule(this);
-                    } catch (Exception error) { showError("Der sichere Anmeldeweg konnte nicht geöffnet werden. Bitte prüfe den Anmeldedienst und einen installierten Systembrowser."); }
+                    } catch (Exception error) { showError("Die Kalender-Aktion konnte nicht abgeschlossen werden."); }
                 });
-            } catch (Exception error) { runOnUiThread(() -> { googleBusy = false; if (!quiet) showError("Die Google-Aktion konnte nicht abgeschlossen werden."); }); }
+            } catch (Exception error) { runOnUiThread(() -> { deviceBusy = false; showError("Der Gerätekalender ist derzeit nicht erreichbar. Deine lokalen Termine bleiben erhalten."); }); }
         });
     }
     @Override protected void onResume() {
         super.onResume();
-        timer.postDelayed(() -> { if (authenticated && web != null) { googleAction("finish", new JSONObject(), true); if (googleEnabled) GoogleSyncWorker.schedule(this); } }, 700);
+        timer.postDelayed(() -> { if (authenticated && deviceEnabled) { application.observeCalendars(); CalendarSyncWorker.schedule(this); } }, 700);
     }
 
     private void createBackup() {

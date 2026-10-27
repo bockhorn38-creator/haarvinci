@@ -128,9 +128,7 @@ def main():
                     path=str(screenshots / f"kalender-{mode}-pixel.png"), full_page=True
                 )
             page.goto(base + "/kalender/google/")
-            expect(
-                page.get_by_role("heading", name="Google ist noch nicht eingerichtet")
-            ).to_be_visible()
+            expect(page.get_by_role("heading", name="Kalender auf deinem Pixel")).to_be_visible()
             expect(page.locator('a[href^="haarvinci://google-connect"]')).to_have_count(0)
             page.screenshot(path=str(screenshots / "google-einrichtung-pixel.png"), full_page=True)
             for width in [360, 390, 412, 600, 760, 1024, 1440]:

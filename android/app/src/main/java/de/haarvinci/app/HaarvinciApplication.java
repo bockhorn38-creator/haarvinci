@@ -29,6 +29,26 @@ public final class HaarvinciApplication extends Application {
     private RuntimeInfo info;
     private PyObject runtime;
     boolean cookiesPrepared = false;
+    // Geteilter Text bleibt ausschließlich im Prozess-RAM bis zur Anmeldung.
+    String pendingImport;
+    long pendingImportAt;
+
+    @Override public void onCreate() {
+        super.onCreate();
+        CalendarProviderBridge.initialize(this);
+        androidx.work.WorkManager.getInstance(this).cancelUniqueWork("haarvinci-google-pending");
+        androidx.work.WorkManager.getInstance(this).cancelUniqueWork("haarvinci-google-periodic");
+    }
+    private android.database.ContentObserver calendarObserver;
+    private final Runnable calendarChanged = () -> CalendarSyncWorker.schedule(this);
+    void observeCalendars() {
+        if (calendarObserver != null || checkSelfPermission(android.Manifest.permission.READ_CALENDAR) != android.content.pm.PackageManager.PERMISSION_GRANTED) return;
+        calendarObserver = new android.database.ContentObserver(main) {
+            @Override public void onChange(boolean selfChange) { main.removeCallbacks(calendarChanged); main.postDelayed(calendarChanged, 1500); }
+        };
+        try { getContentResolver().registerContentObserver(android.provider.CalendarContract.CONTENT_URI, true, calendarObserver); }
+        catch (SecurityException revoked) { calendarObserver = null; }
+    }
 
     public void ensureBackend(Callback callback) {
         worker.execute(() -> {

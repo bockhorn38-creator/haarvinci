@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Appointment, CalendarConnection, PrivateBusy, RemoteBusinessEvent
+from .models import Appointment, DeviceBusinessEvent, DeviceCalendarConnection, DevicePrivateBusy
 
 BERLIN = ZoneInfo("Europe/Berlin")
 
@@ -53,13 +53,13 @@ def entries_for_range(user, first, last, customer=None):
                 }
             )
     if not customer:
-        for block in PrivateBusy.objects.filter(
+        for block in DevicePrivateBusy.objects.filter(
             connection__owner=user, start_at__lt=end, end_at__gt=start
         ):
             result.append(
                 {
                     "title": "Privat belegt",
-                    "subtitle": "Privater Google-Kalender",
+                    "subtitle": "Privater Gerätekalender",
                     "start": block.start_at,
                     "end": block.end_at,
                     "busy_end": block.end_at,
@@ -67,13 +67,13 @@ def entries_for_range(user, first, last, customer=None):
                     "cancelled": False,
                 }
             )
-        for block in RemoteBusinessEvent.objects.filter(
+        for block in DeviceBusinessEvent.objects.filter(
             connection__owner=user, start_at__lt=end, end_at__gt=start
         ):
             result.append(
                 {
                     "title": block.title or "Google-Termin",
-                    "subtitle": "Google geschäftlich · schreibgeschützt",
+                    "subtitle": "Gerätekalender · schreibgeschützt",
                     "start": block.start_at,
                     "end": block.end_at,
                     "busy_end": block.end_at,
@@ -133,8 +133,11 @@ def month_days(day):
 
 
 def connections(user):
-    existing = {row.role: row for row in CalendarConnection.objects.for_user(user)}
+    existing = {
+        row.role: row
+        for row in DeviceCalendarConnection.objects.for_user(user).exclude(state="disconnected")
+    }
     return [
-        existing.get(role) or CalendarConnection(role=role)
-        for role in CalendarConnection.Role.values
+        existing.get(role) or DeviceCalendarConnection(role=role, state="disconnected")
+        for role in ["business", "private"]
     ]

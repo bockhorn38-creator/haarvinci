@@ -7,6 +7,7 @@ urlpatterns = [
     path("", views.calendar_view, name="calendar"),
     path("neu/", views.appointment_form, name="create"),
     path("dauer/", views.duration, name="duration"),
+    path("geraet/", views.google_settings, name="device"),
     path("google/", views.google_settings, name="google"),
     path("arten/neu/", views.type_create, name="type_create"),
     path("kundin/<uuid:pk>/", views.customer_appointments, name="customer"),

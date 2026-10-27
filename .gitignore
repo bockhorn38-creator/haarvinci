@@ -22,6 +22,7 @@ android/app/src/main/python/core/
 android/app/src/main/python/customers/
 android/app/src/main/python/extensions/
 android/app/src/main/python/appointments/
+android/app/src/main/python/intake/
 android/app/src/main/python/desktop_app/
 android/app/src/main/assets/haarvinci/
 *.jks

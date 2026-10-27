@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Nur interne Loopback-Kommunikation; keine Speicher-, Kamera- oder Kontaktfreigaben. -->
+    <!-- Kalenderzugriff wird erst nach ausdrücklicher Auswahl zur Laufzeit angefragt. -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.WRITE_CALENDAR" />
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
     <application
         android:name=".HaarvinciApplication"
         android:label="Haarvinci"
@@ -14,11 +17,17 @@
         android:usesCleartextTraffic="false"
         android:supportsRtl="true">
         <activity android:name=".MainActivity" android:exported="true"
+            android:launchMode="singleTask"
             android:windowSoftInputMode="adjustResize"
             android:configChanges="orientation|screenSize|keyboardHidden">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
     </application>

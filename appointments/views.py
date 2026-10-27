@@ -13,8 +13,8 @@ from django.views.decorators.http import require_GET, require_http_methods
 from customers.models import Customer
 from customers.services import EditConflict
 
-from .forms import AppointmentForm, GoogleSettingsForm, TypeForm, berlin_time
-from .models import Appointment, CalendarSettings, RemoteBusinessEvent
+from .forms import AppointmentForm, TypeForm, berlin_time
+from .models import Appointment, RemoteBusinessEvent
 from .presentation import connections, day_rows, entries_for_range, midnight, month_days
 from .services import ScheduleConflict, cancel_appointment, conflicts, save_appointment
 
@@ -230,23 +230,22 @@ def customer_appointments(request, pk):
 
 
 @login_required
-@require_http_methods(["GET", "POST"])
+@require_GET
 def google_settings(request):
-    settings, _ = CalendarSettings.objects.get_or_create(owner=request.user)
-    form = GoogleSettingsForm(request.POST if request.method == "POST" else None, instance=settings)
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "Die Adresse des Anmeldedienstes wurde gespeichert.")
-        return redirect("appointments:google")
+    from .device_sync import AndroidCalendarBridge, permission_info
+
+    roles = connections(request.user)
+    for role in roles:
+        role.android_sync = "unknown"
+        if role.owner_id and role.state != "disconnected":
+            try:
+                role.android_sync = AndroidCalendarBridge().sync_settings(role)
+            except Exception:
+                pass
     return render(
         request,
-        "appointments/google.html",
-        {
-            "nav": "calendar",
-            "form": form,
-            "connections": connections(request.user),
-            "configured": bool(settings.broker_url),
-        },
+        "appointments/device.html",
+        {"nav": "calendar", "connections": roles, "calendar_permissions": permission_info()},
     )
 
 

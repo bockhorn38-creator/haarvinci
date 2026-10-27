@@ -7,7 +7,12 @@ from django.urls import reverse
 from django.utils import timezone
 
 from appointments.forms import AppointmentForm
-from appointments.models import Appointment, AppointmentType, CalendarConnection, PrivateBusy
+from appointments.models import (
+    Appointment,
+    AppointmentType,
+    DeviceCalendarConnection,
+    DevicePrivateBusy,
+)
 from appointments.presentation import day_rows, entries_for_range
 from customers.models import Customer, CustomerEvent
 
@@ -128,15 +133,15 @@ class CalendarTests(TestCase):
         self.assertEqual(len(response.context["past_appointments"]), 1)
 
     def test_private_busy_is_generic_and_triggers_conflict(self):
-        connection = CalendarConnection.objects.create(
-            owner=self.owner, role="private", calendar_id="private-test@example.com"
+        connection = DeviceCalendarConnection.objects.create(
+            owner=self.owner, role="private", calendar_id="23", fingerprint="f" * 64
         )
         from datetime import time
 
         from appointments.forms import berlin_time
 
         day = timezone.localdate() + timedelta(days=1)
-        PrivateBusy.objects.create(
+        DevicePrivateBusy.objects.create(
             connection=connection,
             start_at=berlin_time(day, time(10)),
             end_at=berlin_time(day, time(12)),
@@ -253,7 +258,7 @@ class CalendarTests(TestCase):
         self.assertContains(page, "&lt;script&gt;")
         self.assertNotContains(page, "<script>gefährlich</script>")
         settings = self.client.get(reverse("appointments:google"))
-        self.assertContains(settings, "Google ist noch nicht eingerichtet")
+        self.assertContains(settings, "Kalender auf deinem Pixel")
         self.assertNotContains(settings, 'href="haarvinci://google-connect')
 
     def test_new_types_are_owner_specific_and_default_types_exist(self):
@@ -292,22 +297,12 @@ class CalendarTests(TestCase):
         self.assertEqual(Appointment.objects.count(), 0)
         self.assertEqual(CustomerEvent.objects.count(), 0)
 
-    def test_broker_address_is_https_only_and_cannot_change_while_connected(self):
+    def test_legacy_broker_configuration_is_no_longer_exposed(self):
         url = reverse("appointments:google")
-        for address in [
-            "http://example.com",
-            "https://user:password@example.com",
-            "https://example.com/path",
-        ]:
-            self.assertTrue(self.client.post(url, {"broker_url": address}).context["form"].errors)
+        response = self.client.get(url)
+        self.assertNotContains(response, 'name="broker_url"')
         self.assertEqual(
-            self.client.post(url, {"broker_url": "https://anmeldung.example.com"}).status_code, 302
-        )
-        CalendarConnection.objects.create(owner=self.owner, role="business", state="connected")
-        self.assertTrue(
-            self.client.post(url, {"broker_url": "https://andere.example.com"})
-            .context["form"]
-            .errors
+            self.client.post(url, {"broker_url": "https://example.com"}).status_code, 405
         )
 
     @override_settings(DESKTOP_TOKEN="fiktiver-privater-app-schluessel")

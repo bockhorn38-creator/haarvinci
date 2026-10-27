@@ -38,3 +38,14 @@ if ! grep -Fq 'OK (1 test)' test-results/android/restart.log || grep -Eq 'FAILUR
   echo 'Die Android-Neustartprüfung wurde nicht erfolgreich abgeschlossen.'
   exit 1
 fi
+
+adb shell am instrument -w -e class 'de.haarvinci.app.AndroidWorkflowTest#c_shareAndClipboardImport' "$instrumentation_runner" 2>&1 | tee test-results/android/import.log
+if ! grep -Fq 'OK (1 test)' test-results/android/import.log || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/import.log; then
+  echo 'Android-Teilen-/Zwischenablageprüfung fehlgeschlagen.'
+  exit 1
+fi
+adb shell am instrument -w -e class 'de.haarvinci.app.CalendarProviderTest' "$instrumentation_runner" 2>&1 | tee test-results/android/provider.log
+if ! grep -Fq 'OK (1 test)' test-results/android/provider.log || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/provider.log; then
+  echo 'CalendarContract-Prüfung mit echten Provider-Testdaten fehlgeschlagen.'
+  exit 1
+fi

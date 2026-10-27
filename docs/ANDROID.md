@@ -40,7 +40,7 @@ Die Sicherungen sind nicht zusätzlich verschlüsselt. Nutze ein geschütztes Ge
 - Native Android-Dateiauswahl für Export und Wiederherstellung. Keine umfassende Speicherberechtigung.
 - Gradle-Wrapper und Distribution sind per veröffentlichter SHA-256-Prüfsumme geprüft. Android-Python-Abhängigkeiten werden aus uv.lock abgeleitet und mit Paket-Hashes installiert.
 
-Bau auf einem Entwicklungssystem mit JDK 17, Python 3.12 und Android SDK 36:
+Bau auf einem Entwicklungssystem mit JDK 21, Python 3.12 und Android SDK 36:
 
 ```bash
 python android/prepare_sources.py

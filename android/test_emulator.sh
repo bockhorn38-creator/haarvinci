@@ -11,8 +11,20 @@ collect_diagnostics() {
   exit "$test_exit"
 }
 trap collect_diagnostics EXIT
-android/gradlew -p android --no-daemon --max-workers=2 :app:connectedDebugAndroidTest '-Pandroid.testInstrumentationRunnerArguments.class=de.haarvinci.app.AndroidWorkflowTest#a_fullWorkflow' 2>&1 | tee test-results/android/emulator.log
+# Manuell installieren: connectedAndroidTest würde die Pakete nach dem Test
+# entfernen und damit einen anschließenden echten Prozess-Neustart verhindern.
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+adb install -r -t android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk
+runner=$(adb shell pm list instrumentation | tr -d '\r' | rg -F '(target=de.haarvinci.app.preview)' | cut -d ' ' -f1 | sed 's/^instrumentation://')
+test -n "$runner"
+adb shell am instrument -w -e class 'de.haarvinci.app.AndroidWorkflowTest#a_fullWorkflow' "$runner" 2>&1 | tee test-results/android/emulator.log
+if ! rg -q 'OK \(1 test\)' test-results/android/emulator.log || rg -q 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/emulator.log; then
+  echo 'Der vollständige Android-Test wurde nicht erfolgreich abgeschlossen.'
+  exit 1
+fi
 adb shell am force-stop de.haarvinci.app.preview
-adb shell am instrument -w -e class 'de.haarvinci.app.AndroidWorkflowTest#b_persistenceAfterProcessRestart' de.haarvinci.app.preview.test/androidx.test.runner.AndroidJUnitRunner 2>&1 | tee test-results/android/restart.log
-test "$(rg -c 'OK \(1 test\)' test-results/android/restart.log)" -ge 1
-if rg -q 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/restart.log; then exit 1; fi
+adb shell am instrument -w -e class 'de.haarvinci.app.AndroidWorkflowTest#b_persistenceAfterProcessRestart' "$runner" 2>&1 | tee test-results/android/restart.log
+if ! rg -q 'OK \(1 test\)' test-results/android/restart.log || rg -q 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/restart.log; then
+  echo 'Die Android-Neustartprüfung wurde nicht erfolgreich abgeschlossen.'
+  exit 1
+fi

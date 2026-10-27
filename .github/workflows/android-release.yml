@@ -1,0 +1,89 @@
+name: Vorhandene Android-Test-APK veröffentlichen
+
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: android-test-release-0.3.0
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      SOURCE_RUN: '40429678795'
+      SOURCE_SHA: c4cc09901adbb2e583bf23deb2e27185d6a8b81f
+      RELEASE_TAG: android-test-v0.3.0
+    steps:
+      # Bewusst kein Checkout, Gradle oder neuer Build: die bereits geprüften
+      # APK-Bytes einschließlich der ursprünglichen Signatur weiterverwenden.
+      - name: Erfolgreichen ursprünglichen Testlauf bestätigen
+        run: |
+          set -euo pipefail
+          gh api "repos/$GH_REPO/actions/runs/$SOURCE_RUN" > source-run.json
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          run = json.loads(Path('source-run.json').read_text())
+          assert run['status'] == 'completed'
+          assert run['conclusion'] == 'success'
+          assert run['head_sha'] == os.environ['SOURCE_SHA']
+          assert run['path'] == '.github/workflows/android.yml'
+          PY
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: '40429678795'
+          artifact-ids: '12700359938'
+          merge-multiple: true
+          path: apk
+      - name: Ursprüngliche Prüfsumme, APK und Signatur prüfen
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          from pathlib import Path
+          root = Path('apk')
+          apk = root / 'Haarvinci-Android-Test-0.3.0.apk'
+          entries = (root / 'SHA256SUMS.txt').read_text().splitlines()
+          assert len(entries) == 1, 'Genau eine APK-Prüfsumme erwartet'
+          expected, name = entries[0].split(maxsplit=1)
+          assert Path(name.strip().lstrip('*')).name == apk.name
+          assert hashlib.file_digest(apk.open('rb'), 'sha256').hexdigest() == expected
+          # Im Release enthält die Prüfsummendatei den direkten Assetnamen.
+          (root / 'SHA256SUMS.txt').write_text(f'{expected}  {apk.name}\n')
+          PY
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --verbose --print-certs apk/Haarvinci-Android-Test-0.3.0.apk > verified-signature.txt
+          cmp apk/SIGNATUR.txt verified-signature.txt
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging apk/Haarvinci-Android-Test-0.3.0.apk > apk-info.txt
+          grep -q "package: name='de.haarvinci.app.preview' versionCode='1' versionName='0.3.0'" apk-info.txt
+      - name: Einzelne APK als GitHub-Testrelease bereitstellen
+        run: |
+          set -euo pipefail
+          cat > release-notes.md <<'NOTES'
+          ## Haarvinci Android-Testversion 0.3.0
+
+          Die APK unten unter **Assets** direkt auf dem Google Pixel herunterladen und öffnen. Kein Entpacken und keine Verbindung zur Windows-App erforderlich. Android ab Version 8, ARM64 (Pixel) und x86-64.
+
+          Diese Datei stammt unverändert aus dem erfolgreich geprüften [Android-Testlauf](https://github.com/bockhorn38-creator/haarvinci/actions/runs/40429678795). Sie wurde für dieses Release **nicht erneut gebaut oder signiert**. Geprüft wurden Installation, Kundenverwaltung, Sicherung, Wiederherstellung und Datenerhaltung nach einem App-Neustart auf einem emulierten Pixel mit Android 15.
+
+          Beim ersten Start einen eigenen Zugang einrichten. Zunächst ausschließlich fiktive Kundendaten verwenden. Entwicklungs-/Testsignierung: vor späteren Testupdates oder einer Deinstallation eigene Daten außerhalb der App sichern. Keine automatische Synchronisierung zwischen Geräten.
+
+          `SHA256SUMS.txt` und `SIGNATUR.txt` dokumentieren Prüfsumme und APK-Zertifikat.
+          NOTES
+          gh release create "$RELEASE_TAG" \
+            --target "$SOURCE_SHA" \
+            --title 'Haarvinci Android-Testversion 0.3.0' \
+            --notes-file release-notes.md \
+            --draft --prerelease \
+            apk/Haarvinci-Android-Test-0.3.0.apk apk/SHA256SUMS.txt apk/SIGNATUR.txt
+          gh release edit "$RELEASE_TAG" --draft=false --prerelease
+          gh release view "$RELEASE_TAG" --json url,assets

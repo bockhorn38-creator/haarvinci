@@ -20,27 +20,32 @@ permissions:
   contents: read
 jobs:
   android:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - uses: android-actions/setup-android@v3
       - uses: gradle/actions/setup-gradle@v4
       - name: Python-Kern vorbereiten und prüfen
         run: |
           set -euo pipefail
+          mkdir -p test-results/android
+          exec > >(tee test-results/android/python.log) 2>&1
           python -m pip install --require-hashes -r android/requirements.lock
           python android/prepare_sources.py
           python tests/android_runtime_smoke.py
       - name: Android-SDK vorbereiten
-        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0' 'platform-tools'
+        run: |
+          set -euo pipefail
+          test -f "$ANDROID_HOME/platforms/android-36/android.jar"
+          test -x "$ANDROID_HOME/build-tools/36.0.0/apksigner"
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --version 2>&1 | tee test-results/android/sdk.log
       - name: APK und Instrumentierung bauen
         run: |
           set -euo pipefail

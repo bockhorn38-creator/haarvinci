@@ -184,6 +184,15 @@ class GoogleController:
         if calendar_id not in valid:
             raise GoogleError(403)
         if (
+            CalendarConnection.objects.for_user(user)
+            .exclude(pk=connection.pk)
+            .filter(calendar_id=calendar_id)
+            .exists()
+        ):
+            return {
+                "message": "Dieser Kalender ist bereits für die andere Rolle ausgewählt. Bitte verwende getrennte geschäftliche und private Kalender."
+            }
+        if (
             role == "business"
             and Appointment.objects.for_user(user)
             .exclude(google_calendar_id="")

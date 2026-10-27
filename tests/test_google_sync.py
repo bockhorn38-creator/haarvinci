@@ -517,3 +517,33 @@ class GoogleSyncTests(TestCase):
         self.assertEqual(vault.load(vault_key(self.connection)), {})
         self.assertFalse(CalendarConnection.objects.filter(pk=self.connection.pk).exists())
         self.assertEqual(self.api.writes, [])
+
+    def test_same_calendar_cannot_be_selected_for_both_roles(self):
+        CalendarConnection.objects.create(
+            owner=self.owner, role="private", calendar_id="business@example.com", state="connected"
+        )
+        self.connection.calendar_id, self.connection.state = "", "choose"
+        self.connection.save()
+        vault = MemoryVault()
+        vault.save(
+            vault_key(self.connection),
+            {
+                "broker": self.config.broker_url,
+                "token": {"access_token": "fiktiver-token", "expires_at": time.time() + 3600},
+            },
+        )
+        result = GoogleController(vault, api_factory=lambda token, role: self.api).choose(
+            self.owner, "business", "business@example.com"
+        )
+        self.connection.refresh_from_db()
+        self.assertIn("getrennte", result["message"])
+        self.assertEqual(self.connection.calendar_id, "")
+        self.assertEqual(self.api.writes, [])
+
+    def test_cancellation_before_first_export_clears_outbox_without_google_write(self):
+        self.item.status, self.item.sync_state = "cancelled", "pending"
+        self.item.save()
+        self.sync()
+        self.assertEqual(self.item.sync_state, "local")
+        self.assertEqual(self.item.google_event_id, "")
+        self.assertEqual(self.api.writes, [])

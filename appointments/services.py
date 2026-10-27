@@ -26,7 +26,8 @@ class ScheduleConflict(Exception):
 
 
 def conflicts(*, user, start, end, buffer=0, exclude=None):
-    until = end.astimezone(UTC) + timedelta(minutes=buffer)
+    start, end = start.astimezone(UTC), end.astimezone(UTC)
+    until = end + timedelta(minutes=buffer)
     result = []
     others = (
         Appointment.objects.for_user(user)
@@ -54,8 +55,8 @@ def snapshot(appointment):
     return {
         "customer": str(appointment.customer),
         "appointment_type": str(appointment.appointment_type),
-        "start_at": timezone.localtime(appointment.start_at).isoformat(),
-        "end_at": timezone.localtime(appointment.end_at).isoformat(),
+        "start_at": timezone.localtime(appointment.start_at).strftime("%d.%m.%Y, %H:%M Uhr (%Z)"),
+        "end_at": timezone.localtime(appointment.end_at).strftime("%d.%m.%Y, %H:%M Uhr (%Z)"),
         "buffer_minutes": str(appointment.buffer_minutes),
         "notes": appointment.notes,
         "status": appointment.get_status_display(),

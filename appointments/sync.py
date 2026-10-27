@@ -184,6 +184,15 @@ def sync_item(item, connection, settings, api):
         return
     if remote is None:
         if item.status == "cancelled":
+            # Eine vor dem ersten Export abgesagte Planung benötigt keine Google-Löschung.
+            # Die ausstehende Markierung darf danach nicht dauerhaft stehen bleiben.
+            with transaction.atomic():
+                get_user_model().objects.select_for_update().get(pk=item.owner_id)
+                current = Appointment.objects.select_for_update().get(pk=item.pk)
+                if current.version == item.version and not current.google_event_id:
+                    current.sync_state = Appointment.Sync.LOCAL
+                    current.last_synced_version = current.version
+                    current.save(update_fields=["sync_state", "last_synced_version"])
             return
         try:
             result = api.insert(connection.calendar_id, payload(item, settings))

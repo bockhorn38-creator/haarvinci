@@ -329,3 +329,12 @@ class CalendarTests(TestCase):
             ),
             self.owner,
         )
+
+    def test_buffer_overlap_is_detected_across_spring_clock_change(self):
+        self.create(day="2026-03-28", begin="23:00", finish="23:30", buffer_minutes=240)
+        response = self.client.post(
+            reverse("appointments:create"),
+            self.data(day="2026-03-29", begin="04:00", finish="05:00", buffer_minutes=0),
+        )
+        self.assertContains(response, "Zeit ist bereits belegt")
+        self.assertEqual(Appointment.objects.count(), 1)

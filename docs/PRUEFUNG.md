@@ -36,3 +36,9 @@ Bestätigter erfolgreicher [Workflow-Lauf 40429678795](https://github.com/bockho
 - Anschließend den App-Prozess tatsächlich mit Android beendet. Ein zweiter instrumentierter Test startete die App erneut, meldete sich an und fand die gespeicherte Kundin wieder. Auch dieser Test führte einen Test aus und bestand.
 - APK mit apksigner verifiziert; APK, SHA-256-Prüfsumme und Zertifikatsinformationen als Artefakt `Haarvinci-Android-Test-APK` bereitgestellt.
 - Entwicklungssignierung für eine Testversion; keine Play-Store-Veröffentlichung, keine dauerhaft verwaltete Freigabesignierung und kein Test auf Connys physischem Pixel behauptet.
+
+### Direkter Release-Download, 27. Oktober 2026
+
+Die vorhandene APK wurde im erfolgreichen [Übertragungslauf 40470816019](https://github.com/bockhorn38-creator/haarvinci/actions/runs/40470816019) aus dem ursprünglichen Artefakt übernommen und als einzelne Datei im [Testrelease android-test-v0.3.0](https://github.com/bockhorn38-creator/haarvinci/releases/tag/android-test-v0.3.0) veröffentlicht. Kein erneuter Build, keine neue Signierung. Ursprünglicher erfolgreicher Testlauf, Quellcommit, APK-Prüfsumme, Zertifikatsausgabe und Paketidentität wurden vor der Veröffentlichung geprüft.
+
+Der vollständige direkte APK-Download wurde anschließend ohne Anmeldung durchgeführt: 52.035.753 Bytes, SHA-256 `c0aa2abce23512555fa3ef95d6d2f74bfe53cd733cfff811dd381f4548f96db4`. Die Prüfsumme stimmt mit dem von GitHub ausgewiesenen Release-Asset-Digest überein. Die Repository-Sichtbarkeit wurde nicht geändert; GitHub meldete das Repository bereits vor der Veröffentlichung als öffentlich.

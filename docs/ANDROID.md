@@ -12,14 +12,20 @@ Zielgeräte: Android ab Version 8 (API 26) mit 64-Bit-ARM-Prozessor, insbesonder
 
 ## Installieren und starten
 
-1. Die [geprüfte Android-Test-APK 0.3.0](https://github.com/bockhorn38-creator/haarvinci/actions/runs/40429678795/artifacts/12700359938) herunterladen (ZIP, ca. 52 MB; GitHub-Anmeldung erforderlich) und die ZIP-Datei entpacken.
-2. Die darin enthaltene `Haarvinci-Android-Test-0.3.0.apk` auf dem Pixel öffnen. Android führt durch die Installation einer selbst heruntergeladenen App. Nur die selbst bezogene, geprüfte Datei aus diesem Projekt verwenden.
+1. Die [geprüfte Android-Test-APK 0.3.0 direkt herunterladen](https://github.com/bockhorn38-creator/haarvinci/releases/download/android-test-v0.3.0/Haarvinci-Android-Test-0.3.0.apk) (einzelne APK, ca. 52 MB; kein ZIP, keine GitHub-Anmeldung erforderlich).
+2. Die heruntergeladene `Haarvinci-Android-Test-0.3.0.apk` auf dem Pixel öffnen. Android führt durch die Installation einer selbst heruntergeladenen App. Falls erforderlich, die Installation aus dieser Quelle für den verwendeten Browser erlauben. Nur die selbst bezogene, geprüfte Datei aus diesem Projekt verwenden.
 3. Haarvinci über das App-Symbol öffnen. Beim ersten Start deinen Vornamen, einen Benutzernamen und ein eigenes Passwort mit mindestens zwölf Zeichen festlegen.
 4. Zum Ausprobieren können sechs fiktive Testkundinnen angelegt werden. Die bisherigen Funktionen Anlegen, Suchen, Anzeigen, Bearbeiten und Export stehen in der App zur Verfügung.
 
 Die Kundenverwaltung arbeitet lokal und benötigt keine Internetverbindung. Die App speichert ihre Daten im privaten Android-Appordner, nicht im LocalStorage. Eine Anmeldung in Google oder Zugriff auf Kontakte, Fotos oder Standort wird nicht angefordert.
 
-Der Build-Download bleibt 30 Tage verfügbar. Bewahre die heruntergeladene APK bei Bedarf auf. Die installierte App funktioniert unabhängig von der Verfügbarkeit des Downloads.
+Die Datei liegt im [GitHub-Testrelease 0.3.0](https://github.com/bockhorn38-creator/haarvinci/releases/tag/android-test-v0.3.0) und unterliegt nicht der 30-Tage-Aufbewahrung der ursprünglichen Build-Artefakte. Sie wurde unverändert aus dem bereits erfolgreich geprüften Build übernommen, ohne neuen Bau oder neue Signierung. Prüfsumme und Zertifikatsinformationen stehen ebenfalls im Release. Die installierte App funktioniert unabhängig von der Verfügbarkeit des Downloads.
+
+Vollständiger Download-Link zum Kopieren:
+
+```text
+https://github.com/bockhorn38-creator/haarvinci/releases/download/android-test-v0.3.0/Haarvinci-Android-Test-0.3.0.apk
+```
 
 ## Sicherungen und Übernahme zwischen Rechner und Pixel
 

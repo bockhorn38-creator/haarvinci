@@ -91,6 +91,19 @@ jobs:
           path: dist/installer/*
           compression-level: 0
           retention-days: 30
+      - name: Funktionsfehler nachvollziehbar ausgeben
+        if: failure()
+        shell: pwsh
+        run: |
+          Get-ChildItem test-results/desktop -Filter '*.json' -ErrorAction SilentlyContinue | ForEach-Object {
+            $diagnostic = (Get-Content $_.FullName -Raw).Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Windows-Funktionsprüfung::$diagnostic"
+          }
+          $log = Join-Path $env:RUNNER_TEMP 'Haarvinci Prüfdaten/haarvinci.log'
+          if (Test-Path $log) {
+            $diagnostic = (Get-Content $log -Tail 60 | Out-String).Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Windows-Appstart::$diagnostic"
+          }
       - uses: actions/upload-artifact@v4
         if: always()
         with:

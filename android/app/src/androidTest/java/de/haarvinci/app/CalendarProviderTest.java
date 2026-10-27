@@ -85,6 +85,7 @@ public class CalendarProviderTest {
         device.executeShellCommand("pm grant " + context.getPackageName() + " " + Manifest.permission.READ_CALENDAR);
         device.executeShellCommand("pm grant " + context.getPackageName() + " " + Manifest.permission.WRITE_CALENDAR);
         assertTrue(new JSONObject(CalendarProviderBridge.permissions()).getBoolean("write"));
+        boolean[] deferredCleanup = {false};
         try (ActivityScenario<MainActivity> active = ActivityScenario.launch(MainActivity.class)) {
             HaarvinciApplication app = (HaarvinciApplication) context.getApplicationContext();
             CountDownLatch started = new CountDownLatch(1);
@@ -134,7 +135,7 @@ public class CalendarProviderTest {
             String foreignId = Long.toString(event(business, "Fremder Fiktivtermin", "2027-01-20T09:00:00Z", "2027-01-20T10:00:00Z", false, null));
             assertTrue(CalendarProviderBridge.instances(business, fp, false, Instant.parse("2027-01-01T00:00:00Z").toEpochMilli(), Instant.parse("2027-02-01T00:00:00Z").toEpochMilli(), "[]").contains("Fremder Fiktivtermin"));
             // Voller Python-Ausgangskorb gegen diesen echten Provider, zwei Rollen aus zwei Testkonten.
-            python(app, "from django.contrib.auth import get_user_model\nfrom django.db import close_old_connections\nfrom django.utils import timezone\nfrom datetime import timedelta\nfrom appointments.models import *\nfrom appointments.device_sync import sync_all, AndroidCalendarBridge\nfrom appointments.device_native import DeviceController\nfrom customers.models import Customer\nu=get_user_model().objects.create_user('fiktiv-provider-owner')\nc=Customer.objects.create(owner=u,first_name='Nele',last_name='Providerfiktiv',email='nele@example.invalid')\nt=timezone.now().replace(microsecond=0)+timedelta(days=20)\na=Appointment.objects.create(owner=u,customer=c,appointment_type=AppointmentType.objects.first(),start_at=t,end_at=t+timedelta(hours=1))\nbridge=AndroidCalendarBridge()\nctl=DeviceController(bridge)\nctl.choose(u,'business','" + business + "')\nctl.choose(u,'private','" + privateCal + "')\nsync_all(bridge,u)\na.refresh_from_db()\nassert a.sync_state=='synced', a.sync_state\nb=DeviceEventBinding.objects.get(appointment=a)\nassert b.provider_id\nfirst=b.provider_id\nsync_all(bridge,u)\nb.refresh_from_db()\nassert b.provider_id==first\na.notes='Offline lokal geändert';a.version+=1;a.save()\nsync_all(bridge,u)\na.refresh_from_db();assert a.sync_state=='synced'\na.status='cancelled';a.version+=1;a.save()\nsync_all(bridge,u)\nsync_all(bridge,u)\na.refresh_from_db();assert a.sync_state=='synced'\nassert not Appointment.objects.filter(notes__contains='GEHEIM').exists()\nclose_old_connections()\n");
+            python(app, "from django.contrib.auth import get_user_model\nfrom django.db import close_old_connections\nfrom django.utils import timezone\nfrom datetime import timedelta\nfrom appointments.models import *\nfrom appointments.device_sync import sync_all, AndroidCalendarBridge\nfrom appointments.device_native import DeviceController\nfrom customers.models import Customer\nu=get_user_model().objects.create_user('fiktiv-provider-owner')\nc=Customer.objects.create(owner=u,first_name='Nele',last_name='Providerfiktiv',email='nele@example.invalid')\nt=timezone.now().replace(microsecond=0)+timedelta(days=20)\na=Appointment.objects.create(owner=u,customer=c,appointment_type=AppointmentType.objects.first(),start_at=t,end_at=t+timedelta(hours=1))\nbridge=AndroidCalendarBridge()\nctl=DeviceController(bridge)\nctl.choose(u,'business','" + business + "')\nctl.choose(u,'private','" + privateCal + "')\nsync_all(bridge,u)\na.refresh_from_db()\nassert a.sync_state=='synced', a.sync_state\nb=DeviceEventBinding.objects.get(appointment=a)\nassert b.provider_id\nfirst=b.provider_id\nsync_all(bridge,u)\nb.refresh_from_db()\nassert b.provider_id==first\na.notes='Offline lokal geändert';a.version+=1;a.save()\nsync_all(bridge,u)\na.refresh_from_db();assert a.sync_state=='synced'\na.status='cancelled';a.version+=1;a.save()\nsync_all(bridge,u)\nsync_all(bridge,u)\na.refresh_from_db();assert a.sync_state=='synced'\nassert not Appointment.objects.filter(notes__contains='GEHEIM').exists()\nassert DevicePrivateBusy.objects.filter(connection__owner=u).count()==4\na2=Appointment.objects.create(owner=u,customer=c,appointment_type=AppointmentType.objects.first(),start_at=t+timedelta(days=1),end_at=t+timedelta(days=1,hours=1))\nsync_all(bridge,u)\na2.refresh_from_db();assert a2.sync_state=='synced'\nclose_old_connections()\n");
             // Fremde und private Termine bleiben unverändert.
             try (Cursor cursor = resolver.query(Events.CONTENT_URI, new String[]{Events.TITLE}, Events._ID + "=?", new String[]{foreignId}, null)) { assertTrue(cursor.moveToFirst()); assertEquals("Fremder Fiktivtermin", cursor.getString(0)); }
             try (Cursor cursor = resolver.query(Events.CONTENT_URI, new String[]{Events.TITLE, Events.RRULE}, Events._ID + "=?", new String[]{Long.toString(recurring)}, null)) { assertTrue(cursor.moveToFirst()); assertEquals("GEHEIM_PRIVAT_TITEL", cursor.getString(0)); assertEquals("FREQ=DAILY;COUNT=3", cursor.getString(1)); }
@@ -155,10 +156,27 @@ public class CalendarProviderTest {
             assertEquals("moved", read(business, fp, marker3, third.getString("id")).getString("status"));
             CalendarProviderBridge.audit = null;
             assertEquals(Arrays.asList("_id,calendar_id"), movedQueries);
+            JSONArray cleanup = new JSONArray(); for (Uri fixture: fixtures) cleanup.put(fixture.toString());
+            assertTrue(context.getSharedPreferences("calendar-fixture-test", Context.MODE_PRIVATE).edit().putString("cleanup", cleanup.toString()).commit());
+            deferredCleanup[0] = true;
 
         } finally {
             CalendarProviderBridge.audit = null;
-            for (Uri fixture: fixtures) resolver.delete(fixture, null, null);
+            if (!deferredCleanup[0]) for (Uri fixture: fixtures) resolver.delete(fixture, null, null);
         }
     }
+    @Test public void mappingSurvivesProcessRestart() throws Exception {
+        try (ActivityScenario<MainActivity> active = ActivityScenario.launch(MainActivity.class)) {
+            HaarvinciApplication app = (HaarvinciApplication) context.getApplicationContext();
+            CountDownLatch started = new CountDownLatch(1);
+            app.ensureBackend((info, error) -> { assertNull(error); started.countDown(); });
+            assertTrue(started.await(90, TimeUnit.SECONDS));
+            python(app, "from django.contrib.auth import get_user_model\nfrom django.db import close_old_connections\nfrom appointments.models import Appointment, DeviceEventBinding\nfrom appointments.device_sync import sync_all, AndroidCalendarBridge\nu=get_user_model().objects.get(username='fiktiv-provider-owner')\na=Appointment.objects.for_user(u).exclude(status='cancelled').get()\nb=DeviceEventBinding.objects.get(appointment=a)\nprevious=b.provider_id\nassert previous\nbridge=AndroidCalendarBridge()\nsync_all(bridge,u)\nsync_all(bridge,u)\na.refresh_from_db();b.refresh_from_db()\nassert a.sync_state=='synced', a.sync_state\nassert b.provider_id==previous\nr=bridge.read(b.connection,b)\nassert r['status']=='found' and r['id']==previous\nclose_old_connections()\n");
+        } finally {
+            JSONArray cleanup = new JSONArray(context.getSharedPreferences("calendar-fixture-test", Context.MODE_PRIVATE).getString("cleanup", "[]"));
+            for (int i=0; i<cleanup.length(); i++) resolver.delete(Uri.parse(cleanup.getString(i)), null, null);
+            context.getSharedPreferences("calendar-fixture-test", Context.MODE_PRIVATE).edit().clear().commit();
+        }
+    }
+
 }

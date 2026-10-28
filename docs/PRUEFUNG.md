@@ -103,3 +103,11 @@ Prüfung am **28. Oktober 2026**, ausschließlich fiktive Daten. Anwendungskern/
 - Ruff, Formatierung, offene Migrationen und Sicherheitsprüfung des Produktionsprofils ohne Fehler. Android-Python-Kern mit privatem Zugang, Einrichtung, Speichern und echter Sicherung/Rückspielung bestanden. Version **0.5.1**, Versionscode **4**, Paket `de.haarvinci.app.preview`, Entwicklungssignatur durch apksigner geprüft.
 
 **Noch nicht geprüft:** tatsächliche Google-Kontosynchronisierung auf einem physischen Pixel, Energieverwaltung dieses Geräts und die konkrete Text-/Link-Aktion einer dort angemeldeten aktuellen ChatGPT-App. Die direkten Android-APIs, nicht die Google-Cloud, wurden im Emulator geprüft. Pixel-Prüflisten: [Gerätekalender](ANDROID-GERAETEKALENDER.md), [ChatGPT-Import](CHATGPT-IMPORT.md). Kein eigener Server, kein Google-Cloud-Projekt und keine OpenAI-API eingerichtet oder erforderlich.
+
+### Direkte Bereitstellung 0.5.1
+
+[Veröffentlichungslauf 40605718260](https://github.com/bockhorn38-creator/haarvinci/actions/runs/40605718260) erfolgreich. Das Original aus dem vollständig erfolgreichen Android-Lauf wurde ohne Neubau oder Neusignierung im bestehenden Download-Zweig ergänzt. Download-Commit: `ac59543b6f8f4f13e648a0cfcd9cff5ace926542`. Bisherige APKs und Prüfsummen bleiben erhalten, Repository-Sichtbarkeit unverändert.
+
+**[Einzelne APK 0.5.1 direkt herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.5.1.apk)** – **54.824.741 Bytes**, SHA-256 `eddc63675f7e0b0b197e67034fe89cbf478400381a32ac0aeac7431901712879`. Der anonyme vollständige Download wurde im Veröffentlichungsworkflow und anschließend nochmals aus der Entwicklungsumgebung geprüft; Prüfsumme identisch. Signaturinformationen und Prüfsumme im Unterordner `0.5.1` des Download-Zweigs.
+
+Zertifikat SHA-256: `e62d470103e9fdd83b02414ab54abd1f65d28c46cc388601350a2854f9dfc41a`. Gegenüber 0.5.0 nachweislich abweichend: Neuinstallation erforderlich, bisherige lokale Testdaten gehen bei Deinstallation verloren. Ausschließlich fiktive Daten verwenden.

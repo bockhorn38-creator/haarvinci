@@ -12,7 +12,7 @@
         </div>
         <a class="button primary" href="{% url 'customers:edit' customer.pk %}">{% icon 'edit' %}Bearbeiten</a>
     </div>
-    <nav class="record-nav" aria-label="Bereiche der Kundenakte"><a href="#kontakt">Kontakt</a><a href="#haarprofil">Haarprofil</a><a href="#extensions">Extensions</a><a href="#termine">Termine</a><a href="#historie">Historie</a></nav>
+    <nav class="record-nav" aria-label="Bereiche der Kundenakte"><a href="#kontakt">Kontakt</a><a href="#haarprofil">Haarprofil</a><a href="#extensions">Extensions</a><a href="#termine">Termine</a><a href="#behandlungen">Behandlungen</a><a href="#historie">Historie</a></nav>
     <div class="detail-columns">
         <div class="detail-main">
             <section class="panel detail-panel" id="kontakt">
@@ -59,6 +59,7 @@
                 </dl>
             </section>
             {% include 'appointments/customer_summary.html' %}
+            {% include 'treatments/customer_summary.html' %}
             {% include 'customers/profile_sections.html' %}
             <section class="panel detail-panel">
                 <h2>{% icon 'note' %}Persönliche Notizen</h2>

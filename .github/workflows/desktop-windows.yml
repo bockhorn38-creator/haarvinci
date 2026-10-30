@@ -11,6 +11,7 @@ on:
       - 'extensions/**'
       - 'appointments/**'
       - 'intake/**'
+      - 'treatments/**'
       - 'core/**'
       - 'templates/**'
       - 'static/**'

@@ -85,6 +85,16 @@ class AppointmentForm(forms.ModelForm):
         data = super().clean()
         if not self.instance._state.adding and not data.get("version"):
             self.add_error(None, "Der Bearbeitungsstand fehlt. Bitte öffne den Termin erneut.")
+        if (
+            not self.instance._state.adding
+            and hasattr(self.instance, "treatment")
+            and data.get("customer")
+            and self.instance.treatment.customer_id != data["customer"].pk
+        ):
+            self.add_error(
+                "customer",
+                "Zu diesem Termin besteht ein Behandlungsvorgang. Die Kundenzuordnung bleibt deshalb erhalten.",
+            )
         if all(data.get(key) for key in ["day", "begin", "finish"]):
             try:
                 start = berlin_time(data["day"], data["begin"])

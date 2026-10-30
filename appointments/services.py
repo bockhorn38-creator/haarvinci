@@ -146,6 +146,12 @@ def save_appointment(*, user, data, appointment_id=None):
     )
     if found and not data.get("allow_overlap"):
         raise ScheduleConflict(found)
+    if (
+        appointment_id
+        and hasattr(item, "treatment")
+        and item.treatment.customer_id != data["customer"].pk
+    ):
+        raise EditConflict
     old_customer = item.customer if appointment_id else None
     for field in EDITABLE:
         setattr(item, field, data[field])
@@ -175,6 +181,10 @@ def save_appointment(*, user, data, appointment_id=None):
             snapshot=before,
         )
     audit(item, user, before if old_customer == item.customer else None)
+    if item.status == "cancelled":
+        from treatments.services import on_appointment_cancelled
+
+        on_appointment_cancelled(item)
     return item
 
 
@@ -204,4 +214,8 @@ def cancel_appointment(*, user, appointment_id, version):
         )
         item.save()
         audit(item, user, before)
+    if item.status == "cancelled":
+        from treatments.services import on_appointment_cancelled
+
+        on_appointment_cancelled(item)
     return item

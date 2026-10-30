@@ -39,6 +39,9 @@ def customer_list(request):
 @require_GET
 def customer_detail(request, pk):
     customer = get_object_or_404(Customer.objects.for_user(request.user), pk=pk)
+    from treatments.reports import report
+
+    salon_stats = report(request.user, customer=customer)
     return render(
         request,
         "customers/detail.html",
@@ -46,9 +49,8 @@ def customer_detail(request, pk):
             "nav": "customers",
             "customer": customer,
             "positions": customer.extensions.all(),
-            "completed_visits": customer.appointments.filter(
-                status="completed", end_at__lte=timezone.now()
-            ).count(),
+            "salon_stats": salon_stats,
+            "completed_visits": salon_stats["visits"],
             "next_appointment": customer.appointments.filter(
                 status__in=["planned", "confirmed"], end_at__gte=timezone.now()
             )
@@ -167,6 +169,49 @@ def customer_export(request, pk):
                         "notes",
                     )
                 ),
+                "treatments": list(
+                    customer.treatments.values(
+                        "id",
+                        "appointment_id",
+                        "performed_on",
+                        "description",
+                        "status",
+                        "rows",
+                        "price_mode",
+                        "charge_extensions",
+                        "total",
+                        "notes",
+                        "cancelled_reason",
+                    )
+                ),
+                "treatment_price_lines": list(
+                    __import__("treatments.models", fromlist=["PriceLine"])
+                    .PriceLine.objects.filter(treatment__customer=customer)
+                    .values("treatment_id", "label", "amount", "order")
+                ),
+                "treatment_extensions": list(
+                    __import__("treatments.models", fromlist=["TreatmentExtension"])
+                    .TreatmentExtension.objects.filter(treatment__customer=customer)
+                    .values("treatment_id", "position_uuid", "label", "snapshot")
+                ),
+                "payments": list(
+                    __import__("treatments.models", fromlist=["Payment"])
+                    .Payment.objects.for_user(request.user)
+                    .filter(treatment__customer=customer)
+                    .values(
+                        "id",
+                        "treatment_id",
+                        "kind",
+                        "purpose",
+                        "amount",
+                        "booked_on",
+                        "method",
+                        "original_id",
+                        "state",
+                        "notes",
+                        "void_reason",
+                    )
+                ),
                 "history": list(
                     customer.events.values(
                         "id",
@@ -175,6 +220,7 @@ def customer_export(request, pk):
                         "recorded_at",
                         "extension_uuid",
                         "appointment_uuid",
+                        "treatment_uuid",
                         "summary",
                         "snapshot",
                         "changes",

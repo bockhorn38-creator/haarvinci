@@ -42,3 +42,24 @@ def import_status(value, field="status"):
         "quantity_unit": ExtensionPosition.Unit.choices,
     }
     return dict(choices.get(field, [])).get(value, localize(value))
+
+
+@register.filter
+def euro(value):
+    from django.utils.formats import number_format
+
+    return f"{number_format(value if value is not None else 0, 2)} €"
+
+
+@register.filter
+def payment_method(value):
+    from treatments.models import Payment
+
+    return dict(Payment.Method.choices).get(value, value)
+
+
+@register.filter
+def payment_purpose(value):
+    from treatments.models import Payment
+
+    return dict(Payment.Purpose.choices).get(value, value)

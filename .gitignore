@@ -27,3 +27,5 @@ android/app/src/main/python/desktop_app/
 android/app/src/main/assets/haarvinci/
 *.jks
 *.keystore
+
+/android/app/src/main/python/treatments/

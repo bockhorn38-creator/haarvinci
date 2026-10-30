@@ -9,6 +9,8 @@ import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request
+import uuid
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -112,11 +114,61 @@ def main():
             assert "Fiktivhaar Atelier" in page and "149,90" in page
             position_id = re.search(r'data-position="([^"]+)"', page).group(1)
             position_edit = detail + "extensions/" + position_id + "/bearbeiten/"
+            treatment_data = {
+                "customer": detail.split("/")[2],
+                "performed_on": date.today().isoformat(),
+                "description": "Fiktiver Sicherungsvorgang",
+                "status": "planned",
+                "price_mode": "individual",
+                "custom_price": "120,00",
+                "extensions": position_id,
+                "notes": "Behandlung vor der Sicherung",
+            }
+            page, _ = post("/behandlungen/neu/", treatment_data | {"action": "preview"})
+            assert "Deine Preisübersicht" in page
+            quote_digest = re.search(r'name="quote_digest" value="([^"]+)"', page).group(1)
+            page, treatment_url = post(
+                "/behandlungen/neu/",
+                treatment_data | {"action": "save", "quote_digest": quote_digest},
+            )
+            treatment_path = urllib.parse.urlsplit(treatment_url).path
+            assert treatment_path.startswith("/behandlungen/") and "Vereinbarter Preis" in page
+            payment_path = treatment_path + "zahlungen/neu/"
+            page, _ = get(payment_path)
+            version = re.search(r'name="version" value="([^"]+)"', page).group(1)
+            page, _ = post(
+                payment_path,
+                {
+                    "amount": "30,00",
+                    "booked_on": date.today().isoformat(),
+                    "method": "cash",
+                    "purpose": "deposit",
+                    "notes": "Fiktive Anzahlung vor der Sicherung",
+                    "booking_key": str(uuid.uuid4()),
+                    "version": version,
+                },
+            )
+            assert "90,00 €" in page
             archive = Path(temporary) / "test.haarvinci"
             runtime.export_backup(str(archive))
             assert json.loads(runtime.inspect_backup(str(archive)))["customers"] == 7
             post(detail + "bearbeiten/", data | {"notes": "Nach der Sicherung"})
             post(position_edit, position_data | {"color": "Schwarz nach Sicherung"})
+            import sqlite3
+
+            with sqlite3.connect(Path(temporary) / "haarvinci.sqlite3") as database:
+                assert (
+                    database.execute("SELECT count(*) FROM treatments_treatment").fetchone()[0] == 1
+                )
+                assert (
+                    database.execute("SELECT count(*) FROM treatments_payment").fetchone()[0] == 1
+                )
+                database.execute(
+                    "UPDATE treatments_treatment SET notes = ?", ("Nach der Sicherung verändert",)
+                )
+                database.execute(
+                    "UPDATE treatments_payment SET notes = ?", ("Nach der Sicherung verändert",)
+                )
             info = json.loads(runtime.restore(str(archive)))
             origin = info["origin"]
             gate()
@@ -125,6 +177,10 @@ def main():
             assert "Vor der Sicherung" in page and "Nach der Sicherung" not in page
             assert "25,5 cm" in page and "Kupfer" in page and "Schwarz nach Sicherung" not in page
             assert "149,90" in page
+            page, _ = get(treatment_path)
+            assert "Behandlung vor der Sicherung" in page
+            assert "Fiktive Anzahlung vor der Sicherung" in page
+            assert "90,00 €" in page and "Nach der Sicherung verändert" not in page
             page, _ = get("/konto/")
             assert "haarvinci://backup" in page and "Deine Daten auf dem Pixel" in page
             parts = urllib.parse.urlsplit(origin)
@@ -140,7 +196,7 @@ def main():
             assert not old_thread.is_alive(), "Interner Dienst blieb bei Keep-Alive geöffnet"
             keepalive.close()
             print(
-                "Android-Kern geprüft: Cookie-Zugriffsschutz, Ersteinrichtung, Kundin mit Haarprofil und Extensions speichern, Sicherung und echte Wiederherstellung mit erneuter Anmeldung."
+                "Android-Kern geprüft: Cookie-Zugriffsschutz, Ersteinrichtung, Kundin mit Haarprofil und Extensions speichern, Behandlung mit Preis und Anzahlung, Sicherung und echte Wiederherstellung aller Vorgänge mit erneuter Anmeldung."
             )
         finally:
             runtime._runtime.stop()

@@ -1,12 +1,13 @@
 from django import forms
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_GET, require_http_methods
 
 from customers.services import EditConflict
+from treatments.services import BusinessError
 
 from .models import ImportReceipt
 from .parser import ImportProblem
@@ -69,7 +70,7 @@ def draft_view(request, pk):
         if request.method == "POST" and request.POST.get("action") == "confirm":
             try:
                 receipt = commit(draft, request.user, request.POST.get("confirmation", ""))
-            except (ImportProblem, EditConflict) as problem:
+            except (ImportProblem, EditConflict, BusinessError, ValidationError) as problem:
                 error = (
                     str(problem) or "Der Datenstand wurde inzwischen geändert. Bitte erneut prüfen."
                 )

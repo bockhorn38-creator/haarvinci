@@ -90,6 +90,12 @@ class CustomerEvent(models.Model):
     """Unveränderliche Momentaufnahme; UUID-Referenz bleibt nach Positionslöschung erhalten."""
 
     class Kind(models.TextChoices):
+        TREATMENT_CREATED = "treatment_created", "Behandlung angelegt"
+        TREATMENT_UPDATED = "treatment_updated", "Behandlung aktualisiert"
+        TREATMENT_CANCELLED = "treatment_cancelled", "Behandlung storniert"
+        PAYMENT_RECEIVED = "payment_received", "Zahlung dokumentiert"
+        PAYMENT_REFUNDED = "payment_refunded", "Rückerstattung dokumentiert"
+        PAYMENT_VOIDED = "payment_voided", "Buchung storniert"
         APPOINTMENT_CREATED = "appointment_created", "Termin vereinbart"
         APPOINTMENT_UPDATED = "appointment_updated", "Termin geändert"
         APPOINTMENT_CANCELLED = "appointment_cancelled", "Termin abgesagt"
@@ -105,6 +111,7 @@ class CustomerEvent(models.Model):
     kind = models.CharField(max_length=24, choices=Kind.choices)
     occurred_on = models.DateField("Datum")
     recorded_at = models.DateTimeField(auto_now_add=True)
+    treatment_uuid = models.UUIDField(null=True, editable=False)
     extension_uuid = models.UUIDField(null=True, editable=False)
     appointment_uuid = models.UUIDField(null=True, editable=False)
     summary = models.CharField(max_length=500)
@@ -117,6 +124,10 @@ class CustomerEvent(models.Model):
 
     @property
     def snapshot_rows(self):
+        if self.treatment_uuid:
+            return [
+                {"label": str(key), "value": str(value)} for key, value in self.snapshot.items()
+            ]
         if not self.extension_uuid:
             return []
         from django.apps import apps

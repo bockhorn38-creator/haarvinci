@@ -333,7 +333,13 @@ def review(draft, user, posted=None):
                     valid = False
                 seen.add(signature)
                 if valid:
-                    plan[name].append({"ref": incoming["customer_ref"], "data": clean})
+                    plan[name].append(
+                        {
+                            "ref": incoming["customer_ref"],
+                            "entity_ref": incoming.get("ref", prefix),
+                            "data": clean,
+                        }
+                    )
             if not valid:
                 problems.append("Bitte die markierten Positionen und Termine prüfen.")
             (positions if name == "extensions" else appointments).append(
@@ -352,6 +358,9 @@ def review(draft, user, posted=None):
                 problems.append(
                     "Zwei Termine im Import überschneiden sich. Bitte die Uhrzeiten prüfen."
                 )
+    from .clinical import review_extra
+
+    extra = review_extra(draft, user, posted, plan, selected, problems)
     if not problems and posted is not None:
         digest = hashlib.sha256(canonical(plan).encode()).hexdigest()
         if ImportReceipt.objects.filter(owner=user, plan_digest=digest).exists():
@@ -360,6 +369,7 @@ def review(draft, user, posted=None):
             draft.plan, draft.confirmation = plan, secrets.token_urlsafe(32)
             draft.plan["digest"] = digest
     return {
+        **extra,
         "customers": customers,
         "positions": positions,
         "appointments": appointments,
@@ -382,8 +392,15 @@ def commit(draft, user, confirmation):
     )
     if prior:
         return prior
-    resolved = {}
-    counts = {"customers": 0, "updates": 0, "extensions": 0, "appointments": 0}
+    resolved, resolved_extensions, resolved_appointments = {}, {}, {}
+    counts = {
+        "customers": 0,
+        "updates": 0,
+        "extensions": 0,
+        "appointments": 0,
+        "treatments": 0,
+        "payments": 0,
+    }
     for incoming in draft.plan["customers"]:
         if incoming["existing"]:
             person = (
@@ -425,21 +442,35 @@ def commit(draft, user, confirmation):
             raise ImportProblem(
                 "Eine Extensions-Position wurde inzwischen bereits angelegt. Bitte neu prüfen."
             )
-        create_position(customer_id=person.pk, user=user, cleaned_data=incoming["data"])
+        from .clinical import entity_id
+
+        position = create_position(
+            customer_id=person.pk,
+            user=user,
+            cleaned_data=incoming["data"],
+            position_id=entity_id(draft, user, incoming["entity_ref"])
+            if draft.payload["version"] == 2
+            else None,
+        )
+        resolved_extensions[incoming["entity_ref"]] = position
         counts["extensions"] += 1
     for incoming in draft.plan["appointments"]:
         person = resolved[incoming["ref"]]
         if duplicate_appointment(person, incoming["data"]):
             raise ImportProblem("Dieser Termin besteht inzwischen bereits. Bitte neu prüfen.")
         try:
-            save_appointment(
+            appointment = save_appointment(
                 user=user, data=incoming["data"] | {"customer": person, "allow_overlap": False}
             )
+            resolved_appointments[incoming["entity_ref"]] = appointment
         except ScheduleConflict:
             raise ImportProblem(
                 "Eine Terminzeit wurde inzwischen belegt. Es wurde nichts aus diesem Paket gespeichert."
             ) from None
         counts["appointments"] += 1
+    from .clinical import commit_extra
+
+    commit_extra(draft, user, resolved, resolved_extensions, resolved_appointments, counts)
     receipt = ImportReceipt.objects.create(
         owner=user,
         import_id=draft.payload["id"],

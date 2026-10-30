@@ -180,6 +180,10 @@ def store_result(item, binding, state, response, pull=False):
                 current.status = Appointment.Status.CONFIRMED
         current.version += 1
         audit(current, current.owner, before)
+        if current.status == "cancelled":
+            from treatments.services import on_appointment_cancelled
+
+            on_appointment_cancelled(current)
     link.baseline, link.revision = state, response.get("revision", "")
     link.last_version = current.version if pull else item.version
     link.provider_id = response.get("id", link.provider_id)

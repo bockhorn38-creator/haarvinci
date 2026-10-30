@@ -109,18 +109,22 @@ def parse(text):
         raise ImportProblem(
             "Der Text ist kein gültiges Haarvinci-JSON. Bitte die gekennzeichnete Importantwort vollständig kopieren."
         ) from None
+    version = data.get("version") if isinstance(data, dict) else None
+    allowed = {"format", "version", "id", "customers", "extensions", "appointments"}
+    if type(version) is int and version == 2:
+        allowed |= {"treatments", "payments"}
     shape(
         data,
-        {"format", "version", "id", "customers", "extensions", "appointments"},
+        allowed,
         ["format", "version", "id", "customers"],
     )
     if (
         data["format"] != "haarvinci.import"
         or type(data["version"]) is not int
-        or data["version"] != 1
+        or data["version"] not in [1, 2]
     ):
         raise ImportProblem(
-            "Dieses Format wird nicht unterstützt. Erwartet wird haarvinci.import, Version 1."
+            "Dieses Format wird nicht unterstützt. Erwartet wird haarvinci.import, Version 1 oder 2."
         )
     try:
         data["id"] = str(uuid.UUID(data["id"]))
@@ -155,10 +159,18 @@ def parse(text):
         customer["data"] = scalars(customer["data"])
     for name, fields in [("extensions", POSITION_FIELDS), ("appointments", APPOINTMENT_FIELDS)]:
         for item in data[name]:
-            shape(item, {"customer_ref", "data"}, ["customer_ref", "data"])
+            shape(
+                item,
+                {"customer_ref", "data", "ref"} if version == 2 else {"customer_ref", "data"},
+                ["customer_ref", "data"],
+            )
             if not isinstance(item["customer_ref"], str) or item["customer_ref"] not in refs:
                 raise ImportProblem("Eine Position verweist auf eine unbekannte Kundin.")
             shape(item["data"], fields)
             item["data"] = scalars(item["data"])
+    if version == 2:
+        from .clinical_format import validate
+
+        validate(data, refs)
     digest = hashlib.sha256(canonical(data).encode()).hexdigest()
     return data, digest

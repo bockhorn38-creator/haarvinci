@@ -25,10 +25,12 @@ def record_event(*, position, user, kind, before=None):
 
 
 @transaction.atomic
-def create_position(*, customer_id, user, cleaned_data):
+def create_position(*, customer_id, user, cleaned_data, position_id=None):
     customer = Customer.objects.for_user(user).select_for_update().get(pk=customer_id)
     position = ExtensionPosition.objects.create(
-        customer=customer, **{name: cleaned_data[name] for name in POSITION_FIELDS}
+        **({"id": position_id} if position_id else {}),
+        customer=customer,
+        **{name: cleaned_data[name] for name in POSITION_FIELDS},
     )
     record_event(position=position, user=user, kind=CustomerEvent.Kind.EXTENSION_CREATED)
     return position

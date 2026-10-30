@@ -374,5 +374,135 @@ public class AndroidWorkflowTest {
             waitFor(receipt, "Import bereits übernommen");
         }
     }
+    private void confirmTreatmentPrice(String path) throws Exception {
+        waitFor(path, "Deine Preisübersicht");
+        js("document.querySelector('button[value=save]').click();");
+    }
+    private void enterMoney(String treatment, String amount, String purpose, String notes) throws Exception {
+        open(treatment + "zahlungen/neu/");
+        waitFor(treatment + "zahlungen/neu/", "Zahlung verbindlich buchen");
+        fill(new JSONObject().put("amount", amount).put("purpose", purpose).put("notes", notes));
+        waitFor(treatment, "Zahlung dokumentiert");
+    }
+    @Test public void d_fullSalonWorkflow() throws Exception {
+        try (ActivityScenario<MainActivity> active = ActivityScenario.launch(MainActivity.class)) {
+            scenario = active;
+            signIn();
+            open("/behandlungen/preise/");
+            waitFor("/behandlungen/preise/", "Deine Preisliste");
+            fill(new JSONObject().put("name", "Fiktive zwei Reihen").put("category", "weaving").put("rows", "2").put("price", "145,00").put("active", "on"));
+            waitFor("/behandlungen/preise/", "Preis gespeichert");
+            fill(new JSONObject().put("name", "Fiktive Haarwäsche").put("category", "service").put("rows", "").put("price", "20,00").put("active", "on"));
+            waitFor("/behandlungen/preise/", "Fiktive Haarwäsche");
+            open("/kundinnen/neu/");
+            waitFor("/kundinnen/neu/", "Kundin speichern");
+            fill(new JSONObject().put("first_name", "Nele").put("last_name", "Salonfiktiv").put("email", "nele.salon@example.com").put("natural_color", "Braun").put("natural_length", "25,5").put("desired_length", "50"));
+            String customer = waitForText("Persönliche Notizen");
+            for (int i=0; i<2; i++) {
+                open(customer + "extensions/neu/");
+                waitFor(customer + "extensions/neu/", "Extensions zuordnen");
+                fill(new JSONObject().put("manufacturer", "Salonfiktiv Atelier " + i).put("extension_type", "Tressen").put("color", i==0 ? "Braun" : "Blond").put("length_cm", "50").put("weight_g", "100").put("purchase_price", "50,00").put("sale_price", "100,00").put("assigned_on", java.time.LocalDate.now(java.time.ZoneId.of("Europe/Berlin")).toString()));
+                waitFor(customer, "Salonfiktiv Atelier " + i);
+            }
+            String yesterday = java.time.LocalDate.now(java.time.ZoneId.of("Europe/Berlin")).minusDays(1).toString();
+            open("/kalender/neu/?kundin=" + customer.split("/")[2] + "&datum=" + yesterday);
+            waitFor("/kalender/neu/", "Termin speichern");
+            js("document.querySelector('[name=appointment_type]').selectedIndex=1;");
+            fill(new JSONObject().put("begin", "10:00").put("finish", "11:00").put("status", "confirmed"));
+            String appointment = waitForText("Bearbeiten / verschieben");
+            String create = "/behandlungen/neu/";
+            open(create + "?termin=" + appointment.split("/")[2]);
+            waitFor(create, "Behandlung erfassen");
+            assertEquals("Zwei vorhandene Extensions müssen verknüpft werden", "2", js("document.querySelectorAll('[name=extensions]:checked').length"));
+            js("document.querySelector('[name=services]').checked=true;");
+            fill(new JSONObject().put("description", "Weaving Salonfiktiv").put("rows", "2").put("status", "planned"));
+            confirmTreatmentPrice(create);
+            String treatment = waitForText("Vereinbarter Preis");
+            assertTrue(state().getString("text").contains("165,00 €"));
+            screenshot("android-behandlung-geplant.png");
+            enterMoney(treatment, "50,00", "deposit", "Fiktive Anzahlung");
+            assertTrue(state().getString("text").contains("115,00 €"));
+            open(treatment + "bearbeiten/");
+            waitFor(treatment + "bearbeiten/", "Behandlung bearbeiten");
+            fill(new JSONObject().put("status", "completed").put("notes", "Weaving durchgeführt. Ausschließlich fiktive Dokumentation."));
+            confirmTreatmentPrice(treatment + "bearbeiten/");
+            waitFor(treatment, "Durchgeführt");
+            open(customer);
+            waitFor(customer, "1 tatsächlich abgeschlossener Besuch");
+            assertEquals("Kein doppelter Besuch durch die Termin-Verknüpfung", "1", js("document.querySelectorAll('#behandlungen').length"));
+            enterMoney(treatment, "65,00", "partial", "Fiktive Teilzahlung");
+            assertTrue(state().getString("text").contains("50,00 €"));
+            enterMoney(treatment, "50,00", "final", "Fiktive Restzahlung");
+            assertTrue(state().getString("text").contains("0,00 €"));
+            screenshot("android-behandlung-vollstaendig-bezahlt.png");
+            open(treatment + "erstattung/");
+            waitFor(treatment + "erstattung/", "Erstattung verbindlich buchen");
+            fill(new JSONObject().put("amount", "20,00").put("notes", "Fiktive Teilrückgabe"));
+            waitFor(treatment, "Rückerstattung dokumentiert");
+            assertTrue(state().getString("text").contains("20,00 €"));
+            enterMoney(treatment, "20,00", "final", "Ausgleich nach fiktiver Rückgabe");
+            open(treatment + "stornieren/");
+            waitFor(treatment + "stornieren/", "Stornierung bestätigen");
+            fill(new JSONObject().put("reason", "Fiktiver Stornofall"));
+            waitFor(treatment, "Noch zu erstatten");
+            for (int i=0; i<4; i++) {
+                open(treatment + "erstattung/");
+                waitFor(treatment + "erstattung/", "Erstattung verbindlich buchen");
+                fill(new JSONObject().put("notes", "Fiktive vollständige Rückgabe " + i));
+                waitFor(treatment, "Rückerstattung dokumentiert");
+            }
+            assertFalse("Nach vollständiger Rückgabe darf keine weitere Erstattung angeboten werden", state().getString("text").contains("Rückerstattung dokumentieren"));
+            open(create + "?kundin=" + customer.split("/")[2]);
+            waitFor(create, "Behandlung erfassen");
+            fill(new JSONObject().put("description", "Individuelle Salonpflege").put("price_mode", "individual").put("custom_price", "90,00").put("status", "planned"));
+            confirmTreatmentPrice(create);
+            String individual = waitForText("Vereinbarter Preis");
+            enterMoney(individual, "30,00", "deposit", "Fiktiver Erfassungsfehler");
+            String voidPath = js("Array.from(document.querySelectorAll('a')).find(a=>a.textContent.includes('Fehlerhafte Buchung')).getAttribute('href')");
+            open(voidPath);
+            waitFor(voidPath, "Stornierung bestätigen");
+            fill(new JSONObject().put("reason", "Fiktive Zahlung wurde versehentlich erfasst"));
+            waitFor(individual, "Buchung storniert");
+            assertTrue(state().getString("text").contains("90,00 €"));
+            open("/behandlungen/statistik/");
+            waitFor("/behandlungen/statistik/", "Deine Statistik");
+            assertTrue(state().getString("text").contains("90,00 €"));
+            assertTrue(state().getString("text").contains("Keine ausstehenden Erstattungen"));
+            screenshot("android-finanzstatistik.png");
+        }
+    }
+
+    @Test public void e_salonPersistenceAndImportV2() throws Exception {
+        try (ActivityScenario<MainActivity> active = ActivityScenario.launch(MainActivity.class)) {
+            scenario=active;
+            signIn();
+            open("/behandlungen/");
+            waitFor("/behandlungen/", "Individuelle Salonpflege");
+            assertTrue(state().getString("text").contains("Weaving Salonfiktiv"));
+            assertTrue(state().getString("text").contains("90,00 €"));
+            // Neues vollständiges Paket nach echtem Prozessneustart via Android-Zwischenablage.
+            String day=java.time.LocalDate.now(java.time.ZoneId.of("Europe/Berlin")).plusDays(12).toString();
+            JSONObject person=new JSONObject().put("ref","k2").put("mode","new").put("data",new JSONObject().put("first_name","Jana").put("last_name","Paketfiktiv").put("email","jana.paket@example.com"));
+            JSONObject treatment=new JSONObject().put("ref","b2").put("mode","new").put("customer_ref","k2").put("data",new JSONObject().put("performed_on",day).put("description","Fiktiver Importvorgang").put("status","planned").put("price_mode","individual").put("custom_price","120,00"));
+            JSONObject payment=new JSONObject().put("ref","z2").put("treatment_ref","b2").put("data",new JSONObject().put("amount","30,00").put("booked_on",java.time.LocalDate.now(java.time.ZoneId.of("Europe/Berlin")).toString()).put("method","cash").put("purpose","deposit"));
+            String payload=new JSONObject().put("format","haarvinci.import").put("version",2).put("id",java.util.UUID.randomUUID().toString()).put("customers",new org.json.JSONArray().put(person)).put("treatments",new org.json.JSONArray().put(treatment)).put("payments",new org.json.JSONArray().put(payment)).toString();
+            scenario.onActivity(activity -> ((android.content.ClipboardManager) activity.getSystemService(android.content.Context.CLIPBOARD_SERVICE)).setPrimaryClip(android.content.ClipData.newPlainText("Fiktives Paket Version 2",payload)));
+            menu("Aus ChatGPT einfügen");
+            String draft=waitForText("Deine Importvorschau");
+            assertTrue(state().getString("text").contains("Behandlung · b2"));
+            open("/kundinnen/?q=Paketfiktiv");
+            waitFor("/kundinnen/","0 Ergebnisse");
+            open(draft);
+            waitFor(draft,"Deine Importvorschau");
+            js("document.querySelector('input[name=action]').form.requestSubmit();");
+            waitFor(draft,"Jetzt verbindlich übernehmen");
+            screenshot("android-import-v2-bestaetigung.png");
+            js("document.querySelector('input[name=confirmation]').form.requestSubmit();");
+            waitForText("Import bereits übernommen");
+            open("/behandlungen/");
+            waitFor("/behandlungen/","Fiktiver Importvorgang");
+            assertTrue(state().getString("text").contains("180,00 €"));
+        }
+    }
 
 }

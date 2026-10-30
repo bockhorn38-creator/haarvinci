@@ -59,6 +59,20 @@ if ! grep -Fq 'OK (1 test)' test-results/android/import.log || grep -Eq 'FAILURE
   test_failures=$((test_failures + 1))
 fi
 
+adb shell am force-stop "$app_package"
+adb shell am instrument -w -e class 'de.haarvinci.app.AndroidWorkflowTest#d_fullSalonWorkflow' "$instrumentation_runner" 2>&1 | tee test-results/android/salon.log
+if ! grep -Fq 'OK (1 test)' test-results/android/salon.log || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/salon.log; then
+  echo 'Behandlungs-/Zahlungsprüfung d_fullSalonWorkflow fehlgeschlagen.'
+  test_failures=$((test_failures + 1))
+fi
+
+adb shell am force-stop "$app_package"
+adb shell am instrument -w -e class 'de.haarvinci.app.AndroidWorkflowTest#e_salonPersistenceAndImportV2' "$instrumentation_runner" 2>&1 | tee test-results/android/salon-restart.log
+if ! grep -Fq 'OK (1 test)' test-results/android/salon-restart.log || grep -Eq 'FAILURES!!!|INSTRUMENTATION_FAILED' test-results/android/salon-restart.log; then
+  echo 'Behandlungs-/Zahlungsprüfung e_salonPersistenceAndImportV2 fehlgeschlagen.'
+  test_failures=$((test_failures + 1))
+fi
+
 if [[ "$test_failures" -ne 0 ]]; then
   echo "$test_failures Android-Funktionsprüfungen sind fehlgeschlagen."
   exit 1

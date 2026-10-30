@@ -36,6 +36,8 @@
                        {% if nav == 'customers' %}aria-current="page"{% endif %}>{% icon 'users' %}Kundinnen</a>
                     <a href="{% url 'appointments:calendar' %}" class="nav-link {% if nav == 'calendar' %}active{% endif %}" {% if nav == 'calendar' %}aria-current="page"{% endif %}>{% icon 'calendar' %}Kalender</a>
                 <a href="{% url 'extensions:list' %}" class="nav-link {% if nav == 'extensions' %}active{% endif %}" {% if nav == 'extensions' %}aria-current="page"{% endif %}>{% icon 'spark' %}Extensions</a>
+                    <a href="{% url 'treatments:list' %}" class="nav-link {% if nav == 'treatments' %}active{% endif %}">{% icon 'note' %}Behandlungen</a>
+                    <a href="{% url 'treatments:statistics' %}" class="nav-link {% if nav == 'statistics' %}active{% endif %}">{% icon 'spark' %}Statistik</a>
                 </nav>
                 <a class="sidebar-note" href="{% url 'customers:create' %}">{% icon 'heart' %}<span>Jede schöne Verbindung
                     <br>

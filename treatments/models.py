@@ -132,7 +132,7 @@ class PriceLine(models.Model):
     treatment = models.ForeignKey(Treatment, on_delete=models.CASCADE, related_name="lines")
     source = models.ForeignKey(PriceOption, on_delete=models.SET_NULL, null=True, blank=True)
     label = models.CharField(max_length=300)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
     order = models.PositiveSmallIntegerField(default=0)
 
     class Meta:

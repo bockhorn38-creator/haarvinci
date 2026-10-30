@@ -133,6 +133,10 @@ class TreatmentForm(forms.Form):
             else False
         ):
             self.add_error("extensions", "Alle Extensions müssen derselben Kundin gehören.")
+        if data.get("performed_on") and not 2000 <= data["performed_on"].year <= 2100:
+            self.add_error(
+                "performed_on", "Bitte ein Behandlungsdatum zwischen 2000 und 2100 wählen."
+            )
         if data.get("status") == "completed":
             if data.get("performed_on") and data["performed_on"] > timezone.localdate():
                 self.add_error(

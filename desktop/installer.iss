@@ -1,4 +1,4 @@
-#define MyAppVersion "0.2.0"
+#define MyAppVersion "0.6.0"
 [Setup]
 AppId={{F9F17449-8F18-43A9-A062-6932DF0902EF}
 AppName=Haarvinci

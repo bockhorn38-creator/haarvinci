@@ -1,6 +1,6 @@
 [project]
 name = "haarvinci"
-version = "0.2.0"
+version = "0.6.0"
 description = "Connys persönliches Kundenbuch für Haarverlängerung und Haarverdichtung"
 requires-python = ">=3.12,<3.14"
 dependencies = [

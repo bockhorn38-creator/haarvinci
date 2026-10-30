@@ -397,7 +397,8 @@ public class AndroidWorkflowTest {
             open("/kundinnen/neu/");
             waitFor("/kundinnen/neu/", "Kundin speichern");
             fill(new JSONObject().put("first_name", "Nele").put("last_name", "Salonfiktiv").put("email", "nele.salon@example.com").put("natural_color", "Braun").put("natural_length", "25,5").put("desired_length", "50"));
-            String customer = waitForText("Persönliche Notizen");
+            String customer = waitForText("Nele Salonfiktiv");
+            assertTrue("Gespeicherte Kundenakte erwartet: " + customer, customer.matches("^/kundinnen/[0-9a-f-]{36}/$"));
             for (int i=0; i<2; i++) {
                 open(customer + "extensions/neu/");
                 waitFor(customer + "extensions/neu/", "Extensions zuordnen");

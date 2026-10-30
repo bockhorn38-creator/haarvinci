@@ -254,8 +254,15 @@ def review_extra(draft, user, posted, plan, selected, problems):
                 )
                 valid = False
             else:
-                balances[target_key[incoming["treatment_ref"]]] += clean["amount"]
-                receipts[incoming["ref"]] = {"amount": clean["amount"]}
+                if clean["purpose"] == "final" and clean["amount"] != total - balance:
+                    form.add_error(
+                        "amount",
+                        "Eine Restzahlung muss den ganzen noch offenen Betrag ausgleichen. Sonst bitte Teilzahlung wählen.",
+                    )
+                    valid = False
+                else:
+                    balances[target_key[incoming["treatment_ref"]]] += clean["amount"]
+                    receipts[incoming["ref"]] = {"amount": clean["amount"]}
         if valid:
             fingerprint = (
                 target_key[incoming["treatment_ref"]],

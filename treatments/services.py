@@ -46,6 +46,10 @@ def quote(user, data, instance=None):
     lines = []
     selected = list(data.get("services", []))
     positions = list(data.get("extensions", []))
+    if len(selected) > 50 or len(positions) > 50:
+        raise BusinessError(
+            "Pro Behandlung sind höchstens 50 Zusatzleistungen und 50 Extensions-Positionen möglich."
+        )
     if any(p.customer.owner_id != user.pk for p in positions):
         raise BusinessError("Ungültige Extensions-Zuordnung.")
     if instance and data["price_mode"] == "keep":
@@ -352,6 +356,10 @@ def book_payment(*, user, treatment_id, data, refund=False):
     elif item.status == "cancelled" or amount > item.outstanding:
         raise BusinessError(
             "Der Zahlungseingang überschreitet den offenen Betrag oder der Vorgang ist storniert."
+        )
+    if not refund and data["purpose"] == "final" and amount != item.outstanding:
+        raise BusinessError(
+            "Eine Restzahlung muss dem gesamten noch offenen Betrag entsprechen. Für einen Teilbetrag bitte Teilzahlung wählen."
         )
     if data["purpose"] not in (["refund"] if refund else ["deposit", "partial", "final"]):
         raise BusinessError("Ungültige Buchungsart.")

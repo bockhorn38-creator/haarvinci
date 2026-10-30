@@ -459,6 +459,89 @@ class TreatmentTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Treatment.objects.exists())
 
+    def test_appointment_cancellation_cascades_only_planned_treatment(self):
+        from appointments.services import cancel_appointment
+
+        start = timezone.now() + timedelta(days=1)
+        appointment = Appointment.objects.create(
+            owner=self.user,
+            customer=self.customer,
+            appointment_type=AppointmentType.objects.first(),
+            start_at=start,
+            end_at=start + timedelta(hours=1),
+        )
+        item = self.create(appointment=appointment.pk)
+        self.payment(item, "50")
+        cancel_appointment(
+            user=self.user, appointment_id=appointment.pk, version=appointment.version
+        )
+        item.refresh_from_db()
+        self.assertEqual(item.status, "cancelled")
+        self.assertEqual(item.refund_due, 50)
+        self.assertEqual(Payment.objects.count(), 1)
+
+    def test_linked_appointment_customer_cannot_be_reassigned(self):
+        from appointments.forms import AppointmentForm
+
+        start = timezone.now() + timedelta(days=1)
+        appointment = Appointment.objects.create(
+            owner=self.user,
+            customer=self.customer,
+            appointment_type=AppointmentType.objects.first(),
+            start_at=start,
+            end_at=start + timedelta(hours=1),
+        )
+        self.create(appointment=appointment.pk)
+        other = Customer.objects.create(
+            owner=self.user, first_name="Andere", last_name="Fiktiv", email="andere.own@example.com"
+        )
+        form = AppointmentForm(
+            {
+                "customer": other.pk,
+                "appointment_type": appointment.appointment_type_id,
+                "version": appointment.version,
+                "day": str(timezone.localdate(start)),
+                "begin": "10:00",
+                "finish": "11:00",
+                "status": "planned",
+                "buffer_minutes": 0,
+            },
+            instance=appointment,
+            user=self.user,
+        )
+        self.assertFalse(form.is_valid())
+        self.assertIn("customer", form.errors)
+
+    def test_keeping_price_allows_notes_after_service_is_deactivated(self):
+        item = self.create()
+        self.wash.active = False
+        self.wash.save()
+        raw = self.raw(price_mode="keep", version=item.version, notes="Neue fiktive Notiz")
+        form = TreatmentForm(raw, user=self.user, instance=item)
+        self.assertTrue(form.is_valid(), form.errors)
+        updated = save_treatment(user=self.user, treatment_id=item.pk, data=form.cleaned_data)
+        self.assertEqual(updated.total, Decimal("165.00"))
+        self.assertEqual(updated.notes, "Neue fiktive Notiz")
+
+    def test_final_payment_must_actually_settle_all_remaining_money(self):
+        item = self.create()
+        with self.assertRaises(BusinessError):
+            self.payment(item, "1", purpose="final")
+        self.assertFalse(item.payments.exists())
+
+    def test_customer_export_contains_prices_relationships_and_money(self):
+        import json
+
+        item = self.create()
+        self.payment(item)
+        response = self.client.get(reverse("customers:export", args=[self.customer.pk]))
+        data = json.loads(response.content)
+        self.assertEqual(len(data["treatments"]), 1)
+        self.assertEqual(len(data["payments"]), 1)
+        self.assertEqual(data["payments"][0]["treatment_id"], str(item.pk))
+        self.assertEqual(len(data["treatment_extensions"]), 1)
+        self.assertEqual(len(data["treatment_price_lines"]), 2)
+
     def test_cross_owner_views_and_csrf_are_protected(self):
         item = self.create()
         entry = self.payment(item)

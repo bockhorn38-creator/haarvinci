@@ -378,11 +378,20 @@ def review(draft, user, posted=None):
     }
 
 
+def valid_confirmation(draft, confirmation):
+    try:
+        return isinstance(confirmation, str) and secrets.compare_digest(
+            confirmation.encode("utf-8"), draft.confirmation.encode("utf-8")
+        )
+    except UnicodeError:
+        return False
+
+
 @transaction.atomic
 def commit(draft, user, confirmation):
-    if draft.receipt_id and secrets.compare_digest(confirmation, draft.confirmation):
+    if draft.receipt_id and valid_confirmation(draft, confirmation):
         return ImportReceipt.objects.get(owner=user, pk=draft.receipt_id)
-    if not draft.plan or not secrets.compare_digest(confirmation, draft.confirmation):
+    if not draft.plan or not valid_confirmation(draft, confirmation):
         raise ImportProblem("Bitte die aktuelle Vorschau zuerst prüfen.")
     get_user_model().objects.select_for_update().get(pk=user.pk)
     prior = (

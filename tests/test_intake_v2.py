@@ -157,6 +157,7 @@ class ImportV2Tests(TestCase):
         payload = bundle2()
         payload["extensions"][0]["data"]["sale_price"] = "100,00"
         payload["treatments"][0]["data"]["charge_extensions"] = True
+        payload["payments"][1]["data"]["purpose"] = "partial"
         draft = self.prepare(payload)
         self.ready(draft)
         commit(draft, self.user, draft.confirmation)
@@ -342,6 +343,32 @@ class ImportV2Tests(TestCase):
         payload["payments"] = []
         with self.assertRaises(ImportProblem):
             parse(json.dumps(payload))
+
+    def test_failed_confirmation_shows_error_and_requires_review_again(self):
+        draft = self.prepare()
+        self.ready(draft)
+        self.tariff.price = 999
+        self.tariff.version += 1
+        self.tariff.save()
+        response = self.client.post(
+            reverse("intake:draft", args=[draft.key]),
+            {"action": "confirm", "confirmation": draft.confirmation},
+        )
+        self.assertContains(response, "Preise oder Zuordnungen wurden inzwischen geändert")
+        self.assertContains(response, "Angaben prüfen")
+        self.assertNotContains(response, "Jetzt verbindlich übernehmen")
+        self.assertFalse(Treatment.objects.exists())
+        self.assertFalse(Payment.objects.exists())
+
+    def test_non_ascii_confirmation_is_rejected_without_server_error(self):
+        draft = self.prepare()
+        self.ready(draft)
+        response = self.client.post(
+            reverse("intake:draft", args=[draft.key]),
+            {"action": "confirm", "confirmation": "Fälschung"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(Customer.objects.exists())
 
     def test_missing_money_fields_and_rows_show_errors_without_any_write(self):
         payload = bundle2()

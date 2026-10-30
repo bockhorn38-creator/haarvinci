@@ -82,6 +82,9 @@ def draft_view(request, pk):
             else None
         )
         result = review(draft, request.user, posted)
+        if error:
+            result["ready"] = False
+            draft.plan, draft.confirmation = None, ""
         return render(
             request,
             "intake/ready.html" if result["ready"] else "intake/draft.html",

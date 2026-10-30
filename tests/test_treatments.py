@@ -71,6 +71,7 @@ class TreatmentTests(TestCase):
 
     def raw(self, **changes):
         return {
+            "creation_key": str(uuid.uuid4()),
             "customer": str(self.customer.pk),
             "performed_on": str(timezone.localdate()),
             "description": "Weaving fiktiv",
@@ -541,6 +542,20 @@ class TreatmentTests(TestCase):
         self.assertEqual(data["payments"][0]["treatment_id"], str(item.pk))
         self.assertEqual(len(data["treatment_extensions"]), 1)
         self.assertEqual(len(data["treatment_price_lines"]), 2)
+
+    def test_treatment_double_click_is_idempotent_without_appointment(self):
+        data = self.data()
+        pricing = quote(self.user, data)
+        first = save_treatment(user=self.user, data=data, expected_quote=pricing["digest"])
+        second = save_treatment(user=self.user, data=data, expected_quote=pricing["digest"])
+        self.assertEqual(first.pk, second.pk)
+        self.assertEqual(Treatment.objects.count(), 1)
+        with self.assertRaises(BusinessError):
+            save_treatment(
+                user=self.user,
+                data=data | {"notes": "Anderer Inhalt"},
+                expected_quote=pricing["digest"],
+            )
 
     def test_cross_owner_views_and_csrf_are_protected(self):
         item = self.create()

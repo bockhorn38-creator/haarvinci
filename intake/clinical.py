@@ -334,6 +334,9 @@ def commit_extra(draft, user, resolved, extensions, appointments, counts):
             continue
         data = dict(incoming["data"])
         data["customer"] = resolved[incoming["customer_ref"]]
+        data["creation_key"] = uuid.uuid5(
+            uuid.UUID(draft.payload["id"]), f"owner:{user.pk}:treatment:{incoming['ref']}"
+        )
         if incoming["appointment_ref"]:
             data["appointment"] = appointments[incoming["appointment_ref"]]
         ids = [p.pk for p in data["extensions"]]

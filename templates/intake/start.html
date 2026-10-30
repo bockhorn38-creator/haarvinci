@@ -1,12 +1,24 @@
 {% extends 'base.html' %}{% load ui %}{% block title %}Aus ChatGPT übernehmen{% endblock %}
-{% block content %}<a class="back-link" href="{% url 'account' %}">{% icon 'back' %}Zurück zum Konto</a><div class="page-heading"><div><p class="eyebrow">VOM GESPRÄCH IN DEIN KUNDENBUCH</p><h1>Aus ChatGPT übernehmen<span class="rose-dot">.</span></h1><p>Text einfügen, Angaben prüfen, bewusst übernehmen.</p></div></div><section class="panel detail-panel"><h2>Du behältst die Entscheidung.</h2><p class="history-hint">Lass ChatGPT eine Antwort im Format <strong>haarvinci.import · Version 1</strong> erstellen. Teile den Antworttext direkt an Haarvinci oder kopiere ihn. Ein Teilen-Link allein enthält keine Kundendaten und wird hier nicht abgerufen. Vorschauen bleiben bis zur Bestätigung nur im Arbeitsspeicher und verfallen nach 30 Minuten. Es gibt keinen Server- oder OpenAI-API-Aufruf.</p>{% if android_mode %}<div class="position-actions"><a class="button primary" href="haarvinci://import-clipboard">{% icon 'note' %}Aus ChatGPT einfügen</a></div>{% endif %}</section><form method="post" class="panel form-section import-paste" novalidate>{% csrf_token %}{% include 'customers/form_errors.html' %}{% include 'customers/field.html' with field=form.text %}<button class="button primary" type="submit">{% icon 'arrow' %}Vorschau öffnen</button></form><details class="panel form-section fold-card"><summary><h2>Formatvorlage</h2><span>Nur fiktive Beispieldaten. Fehlende Angaben kannst du vor der Übernahme ergänzen.</span></summary><p class="history-hint">Bitte ChatGPT: „Erstelle genau ein JSON-Importpaket nach der Haarvinci-Vorlage. Erfinde keine fehlenden Kontaktdaten oder Preise. Verwende eine neue UUID als id. Gib fehlende Angaben leer aus, damit ich sie in Haarvinci ergänzen kann.“</p><pre class="import-example">{
+{% block content %}<a class="back-link" href="{% url 'account' %}">{% icon 'back' %}Zurück zum Konto</a><div class="page-heading"><div><p class="eyebrow">VOM GESPRÄCH IN DEIN KUNDENBUCH</p><h1>Aus ChatGPT übernehmen<span class="rose-dot">.</span></h1><p>Text einfügen, Angaben prüfen, bewusst übernehmen.</p></div></div><section class="panel detail-panel"><h2>Du behältst die Entscheidung.</h2><p class="history-hint">Lass ChatGPT eine Antwort im Format <strong>haarvinci.import · Version 2</strong> erstellen (Version 1 bleibt unterstützt). Behandlungen und Geldbuchungen benötigen Version 2. Lass Beträge nur aus deinen ausdrücklichen Angaben übernehmen. Teile den Antworttext direkt an Haarvinci oder kopiere ihn. Ein Teilen-Link allein enthält keine Kundendaten und wird hier nicht abgerufen. Vorschauen bleiben bis zur Bestätigung nur im Arbeitsspeicher und verfallen nach 30 Minuten. Es gibt keinen Server- oder OpenAI-API-Aufruf.</p>{% if android_mode %}<div class="position-actions"><a class="button primary" href="haarvinci://import-clipboard">{% icon 'note' %}Aus ChatGPT einfügen</a></div>{% endif %}</section><form method="post" class="panel form-section import-paste" novalidate>{% csrf_token %}{% include 'customers/form_errors.html' %}{% include 'customers/field.html' with field=form.text %}<button class="button primary" type="submit">{% icon 'arrow' %}Vorschau öffnen</button></form><details class="panel form-section fold-card"><summary><h2>Formatvorlage</h2><span>Nur fiktive Beispieldaten. Fehlende Angaben kannst du vor der Übernahme ergänzen.</span></summary><p class="history-hint">Bitte ChatGPT: „Erstelle genau ein JSON-Importpaket nach der Haarvinci-Vorlage. Erfinde keine fehlenden Kontaktdaten oder Preise. Verwende eine neue UUID als id. Gib fehlende Angaben leer aus, damit ich sie in Haarvinci ergänzen kann.“</p><pre class="import-example">{
   "format": "haarvinci.import",
-  "version": 1,
+  "version": 2,
   "id": "72be17da-0928-4c01-8ff3-14434eaa17d1",
   "customers": [{
     "ref": "kundin1", "mode": "new",
     "data": {"first_name": "Nora", "last_name": "Testblume",
              "email": "nora@example.com", "natural_color": "Braun"}
   }],
-  "extensions": [], "appointments": []
+  "extensions": [], "appointments": [],
+  "treatments": [{
+    "ref": "b1", "customer_ref": "kundin1", "mode": "new",
+    "data": {"description": "Fiktive Pflegebehandlung",
+             "performed_on": "{{ today|date:'Y-m-d' }}", "status": "planned",
+             "price_mode": "individual", "custom_price": "120,00"}
+  }],
+  "payments": [{
+    "ref": "z1", "treatment_ref": "b1",
+    "data": {"amount": "30,00", "booked_on": "{{ today|date:'Y-m-d' }}",
+             "method": "cash", "purpose": "deposit",
+             "notes": "Ausschließlich fiktive Beispiel-Anzahlung"}
+  }]
 }</pre></details>{% endblock %}

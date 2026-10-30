@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+import uuid
 from decimal import Decimal
 
 from django.contrib.auth import get_user_model
@@ -189,6 +190,36 @@ def event(item, kind, summary, snapshot=None):
 @transaction.atomic
 def save_treatment(*, user, data, treatment_id=None, expected_quote=None):
     owner_lock(user)
+    creation_key = data.get("creation_key") or uuid.uuid4()
+    request_data = {
+        key: str(data.get(key))
+        for key in [
+            "performed_on",
+            "description",
+            "status",
+            "rows",
+            "price_mode",
+            "custom_price",
+            "notes",
+            "charge_extensions",
+        ]
+    }
+    request_data.update(
+        customer=str(data["customer"].pk),
+        appointment=str(getattr(data.get("appointment"), "pk", "")),
+        services=sorted(str(p.pk) for p in data.get("services", [])),
+        extensions=sorted(str(p.pk) for p in data.get("extensions", [])),
+        quote=expected_quote,
+    )
+    creation_digest = hashlib.sha256(json.dumps(request_data, sort_keys=True).encode()).hexdigest()
+    if not treatment_id:
+        prior = Treatment.objects.for_user(user).filter(creation_key=creation_key).first()
+        if prior:
+            if prior.creation_digest != creation_digest:
+                raise BusinessError(
+                    "Diese Vorgangskennung wurde bereits für andere Angaben verwendet. Bitte den vorhandenen Vorgang öffnen."
+                )
+            return prior
     item = (
         Treatment.objects.for_user(user).select_for_update().get(pk=treatment_id)
         if treatment_id
@@ -247,6 +278,8 @@ def save_treatment(*, user, data, treatment_id=None, expected_quote=None):
     for field in ["performed_on", "description", "status", "rows", "notes", "charge_extensions"]:
         setattr(item, field, data.get(field, False if field == "charge_extensions" else ""))
     item.customer, item.appointment, item.total = customer, appointment, pricing["total"]
+    if not treatment_id:
+        item.creation_key, item.creation_digest = creation_key, creation_digest
     if data["price_mode"] != "keep":
         item.price_mode = data["price_mode"]
     item.version = item.version + 1 if treatment_id else 1

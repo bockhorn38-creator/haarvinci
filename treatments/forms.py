@@ -45,6 +45,7 @@ class PriceForm(forms.ModelForm):
 
 
 class TreatmentForm(forms.Form):
+    creation_key = forms.UUIDField(widget=forms.HiddenInput, initial=uuid.uuid4, required=False)
     customer = forms.ModelChoiceField(label="Kundin", queryset=Customer.objects.none())
     appointment = forms.ModelChoiceField(
         label="Zugehöriger Termin", queryset=Appointment.objects.none(), required=False

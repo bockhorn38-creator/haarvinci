@@ -79,6 +79,8 @@ class Treatment(models.Model):
         blank=True,
         related_name="treatment",
     )
+    creation_key = models.UUIDField(default=uuid.uuid4, editable=False)
+    creation_digest = models.CharField(max_length=64, editable=False, default="", blank=True)
     performed_on = models.DateField("Behandlungsdatum", default=timezone.localdate)
     description = models.CharField("Behandlung", max_length=200)
     status = models.CharField(
@@ -101,6 +103,9 @@ class Treatment(models.Model):
     class Meta:
         ordering = ["-performed_on", "-created_at", "-id"]
         constraints = [
+            models.UniqueConstraint(
+                fields=["owner", "creation_key"], name="treatment_creation_idempotency"
+            ),
             models.CheckConstraint(condition=Q(total__gte=0), name="treatment_total_nonnegative"),
             models.CheckConstraint(
                 condition=Q(rows__isnull=True) | Q(rows__gte=1, rows__lte=20),

@@ -126,6 +126,8 @@ def main():
             }
             page, _ = post("/behandlungen/neu/", treatment_data | {"action": "preview"})
             assert "Deine Preisübersicht" in page
+            creation_key = re.search(r'name="creation_key" value="([^"]+)"', page).group(1)
+            treatment_data["creation_key"] = creation_key
             quote_digest = re.search(r'name="quote_digest" value="([^"]+)"', page).group(1)
             page, treatment_url = post(
                 "/behandlungen/neu/",

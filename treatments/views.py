@@ -168,6 +168,10 @@ def treatment_form(request, pk=None):
         try:
             pricing = quote(request.user, form.cleaned_data, item)
             if request.POST.get("action") == "save":
+                if not item and not form.cleaned_data.get("creation_key"):
+                    raise BusinessError(
+                        "Die Vorgangskennung fehlt. Bitte die Erfassung erneut öffnen."
+                    )
                 if not form.cleaned_data["quote_digest"]:
                     raise BusinessError(
                         "Bitte zuerst den Preis prüfen und anschließend bestätigen."

@@ -58,7 +58,7 @@ public class AndroidWorkflowTest {
         throw new AssertionError("Erwartete Seite " + path + " mit " + text + "; letzte Seite: " + current);
     }
     private void fill(JSONObject fields) throws Exception {
-        js("const form=document.querySelector('form');for(const [name,value] of Object.entries(" + fields + ")){const input=form.elements.namedItem(name);if(!input)throw new Error('Formularfeld fehlt: '+name);if(input.type==='checkbox')input.checked=(value==='on'||value==='true');else input.value=value;}form.requestSubmit();");
+        js("(()=>{const form=document.querySelector('form');for(const [name,value] of Object.entries(" + fields + ")){const input=form.elements.namedItem(name);if(!input)throw new Error('Formularfeld fehlt: '+name);if(input.type==='checkbox')input.checked=(value==='on'||value==='true');else input.value=value;}form.requestSubmit();})()");
     }
     private String waitForText(String text) throws Exception {
         long deadline = System.currentTimeMillis() + 45000;
@@ -88,7 +88,8 @@ public class AndroidWorkflowTest {
             screenshot("android-menue-fehler.png");
             java.io.ByteArrayOutputStream hierarchy = new java.io.ByteArrayOutputStream();
             device.dumpWindowHierarchy(hierarchy);
-            throw new AssertionError("Programmmenü fehlt: " + label + "; UI: " + hierarchy.toString("UTF-8"));
+            String hierarchyText = hierarchy.toString("UTF-8");
+            throw new AssertionError("Programmmenü fehlt: " + label + "; Seite: " + state() + "; UI: " + hierarchyText.substring(0, Math.min(6000, hierarchyText.length())));
         }
         item.click();
     }

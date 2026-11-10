@@ -92,7 +92,9 @@ jobs:
           from pathlib import Path
           paths = list(Path('test-results/android').glob('*.log')) + list(Path('test-results/android').glob('logcat.txt')) + list(Path('android/app/build/outputs/androidTest-results').rglob('*.xml'))
           for path in paths:
-              text = path.read_text(errors='replace')[-14000:]
+              source = path.read_text(errors='replace')
+              causes = [line[:2500] for line in source.splitlines() if any(marker in line for marker in ['Error in ', 'java.lang.AssertionError:', 'FATAL EXCEPTION', 'ANR in ', 'Caused by:', 'INSTRUMENTATION_FAILED'])]
+              text = '\n'.join(causes[:8]) + '\n' + source[-7000:]
               text = text.replace('%','%25').replace('\r','%0D').replace('\n','%0A')
               print(f'::error title=Android-Prüfung {path.name}::{text}')
           PY

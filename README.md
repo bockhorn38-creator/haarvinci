@@ -1,6 +1,6 @@
 # Haarvinci
 
-Connys persönliches Kundenbuch für Haarverlängerung und Haarverdichtung. Die vollständig deutsche Oberfläche enthält Anmeldung, Kundenverwaltung, Haarprofile und kundenbezogene Extensions. Android und Windows speichern lokal in SQLite; die Servervariante nutzt PostgreSQL.
+Connys Verwaltungs-App für Haarverlängerung und Haarverdichtung. Die vollständig deutsche Oberfläche verbindet Kundenverwaltung, Haarprofile, Extensions, Kalender, Behandlungen, Preise und Zahlungen. Android und Windows speichern lokal in SQLite; die Servervariante nutzt PostgreSQL.
 
 ## Android-Version für das Pixel
 
@@ -29,12 +29,16 @@ Die folgenden bisherigen Startbefehle betreffen die Server-/Entwicklungsversion.
 - Extensions-Übersicht mit Kundinnen-/Produktsuche, Lieferstatusfilter und Eingabevorschlägen.
 - Lokaler Kalender mit Tages-, Wochen- und Monatsansicht, Terminanlage, Verschieben, Absagen und Puffer-/Überschneidungsprüfung.
 - Nächster/letzter abgeschlossener Termin und tatsächliche abgeschlossene Besuche in der Kundenakte.
-- Optionale Google-Anbindung mit privater FreeBusy-Abfrage, geschäftlicher Synchronisierung und Konfliktentscheidungen. **Noch keine echte Kontoabnahme:** OAuth-Projekt und eigener HTTPS-Anmeldedienst sind nach [docs/GOOGLE-KALENDER.md](docs/GOOGLE-KALENDER.md) manuell einzurichten.
-- Einzelne Kundenakten samt Haarprofil, Extensions und Historie als JSON-Datei exportieren.
+- Optionale native Android-Gerätekalender: geschäftlicher Abgleich und private Belegt-Zeiten, Konfliktentscheidungen, kein eigener OAuth-Server. Android übernimmt den Google-Kontosync. [Einrichtung und Grenzen](docs/ANDROID-GERAETEKALENDER.md); die echte Google-Synchronisierung bleibt eine Pixel-Prüfung.
+- Verknüpfte Behandlungen mit Dokumentation, konfigurierbaren Weaving-Reihenpreisen, Zusatzleistungen und individuellen Gesamtpreisen. Preisvereinbarungen bleiben als Momentaufnahme erhalten.
+- Manuell dokumentierte Anzahlungen, Teil-/Restzahlungen, Korrekturstornos und tatsächliche Rückerstattungen; automatisch berechnete Restbeträge und Erstattungsbedarf.
+- Kunden- und Finanzstatistiken aus den gespeicherten Vorgängen; Leistungswert, Geldzufluss und offene Forderungen getrennt.
+- ChatGPT-Textimport v1/v2 mit Vorschau, eindeutiger manueller Zuordnung und ausdrücklicher Bestätigung; keine OpenAI-API.
+- Einzelne Kundenakten samt Haarprofil, Extensions, Historie und finanziellen Vorgängen als JSON-Datei exportieren.
 - Lokale PostgreSQL-Sicherungen mit Prüfsummen und Wiederherstellungsprobe.
 - Online-PWA mit App-Symbolen. Keine Kundendaten im Offline-Cache.
 
-Behandlungen, Bestellungen, Zahlungen, Statistiken und KI sind bewusst noch nicht implementiert. Kalender und Termine sind in [docs/KALENDER.md](docs/KALENDER.md) beschrieben. Die Extensions-Struktur ist in [docs/EXTENSIONS.md](docs/EXTENSIONS.md) beschrieben. Die fachlichen Grenzen und die vorgesehenen Erweiterungswege der weiteren Module stehen in [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
+Der vollständige Kundenablauf und die Berechnungsregeln stehen in [docs/BEHANDLUNGEN-ZAHLUNGEN.md](docs/BEHANDLUNGEN-ZAHLUNGEN.md). Die Preisliste ist anfangs leer und wird mit den eigenen Tarifen gefüllt. Bestellungen, automatische Bankenanbindung und eine direkte KI-/MCP-Anbindung sind nicht implementiert. Kalender: [docs/KALENDER.md](docs/KALENDER.md), Extensions: [docs/EXTENSIONS.md](docs/EXTENSIONS.md), Architektur: [docs/ARCHITEKTUR.md](docs/ARCHITEKTUR.md).
 
 ## Starten – Schritt für Schritt
 
@@ -96,6 +100,8 @@ Für den echten Browser-Test zusätzlich die App in einem anderen Terminal start
 uv run python tests/browser_smoke.py
 uv run python tests/extensions_browser_smoke.py
 uv run python tests/calendar_browser_smoke.py
+uv run python tests/intake_browser_smoke.py
+uv run python tests/treatments_browser_smoke.py
 ```
 
 Im vorbereiteten Cloud-System wird das bereits installierte Chromium verwendet. Auf anderen Rechnern Chromium über den Paketmanager bereitstellen und `CHROMIUM_PATH` auf dessen Programmdatei setzen, oder die passende Playwright-Version mit `uv run playwright install chromium` installieren. Ohne `CHROMIUM_PATH` nutzt der Test `/usr/bin/chromium`, sofern vorhanden, sonst Playwrights Browser.
@@ -112,9 +118,9 @@ uv run python scripts/backup.py restore-test .local/backups/DEINE-SICHERUNG.dump
 
 Der letzte Befehl spielt die Sicherung tatsächlich in eine getrennte temporäre Datenbank zurück, vergleicht alle Tabellenanzahlen und entfernt nur diese temporäre Datenbank. Die laufende Datenbank bleibt unverändert. Sichere immer die zusammengehörigen `.dump`- und `.json`-Dateien. Vollständige Anleitung, automatischer Zeitplan, externe Kopien und Wiederanlauf: [docs/BETRIEB.md](docs/BETRIEB.md).
 
-## Nutzung auf Connys Google Pixel
+## Alternative Servernutzung auf Connys Google Pixel
 
-Für die reguläre Nutzung braucht Haarvinci eine **HTTPS-Adresse auf einem dauerhaft laufenden Server**, eine PostgreSQL-Datenbank und regelmäßige externe Sicherungen. Die App lässt sich dann in Chrome über „Zum Startbildschirm hinzufügen“ bzw. „App installieren“ installieren. Sie benötigt weiterhin Internet. Es werden keine Kundendaten auf dem Pixel zwischengespeichert.
+Die eigenständige Android-APK oben braucht keinen Server. Nur die alternative Browser-/PWA-Variante benötigt eine **HTTPS-Adresse auf einem dauerhaft laufenden Server**, PostgreSQL und regelmäßige externe Sicherungen. Diese Variante benötigt Internet und speichert keine Kundenakten im Browsercache.
 
 Ein kleiner verwalteter App-Server plus verwaltetes PostgreSQL ist für den Anfang eine wartungsarme Option. Als grobe Budgetplanung sind je nach Anbieter etwa **15–40 Euro pro Monat** zuzüglich Domain realistisch; dies sind keine geprüften Anbieterpreise. Alternativ ist ein VPS häufig günstiger, erfordert aber eigene Updates, Überwachung und Sicherungen. Es wurde noch kein Hosting bestellt oder eingerichtet. Die konkreten Einstellungen stehen in [docs/BETRIEB.md](docs/BETRIEB.md).
 

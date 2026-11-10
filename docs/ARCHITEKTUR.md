@@ -30,9 +30,7 @@ Die Oberfläche ist deutsch, für Touch ausgelegt, mit unterer Navigation auf Sm
 
 - Kalender/Termine sind seit 0.5 in `appointments` implementiert, die optionale Google-Verbindung nutzt einen separaten OAuth-Anmeldedienst und native Android-Tokenablage. Echte Google-Einrichtung/Abnahme stehen noch aus; siehe unten.
 - Optionale spätere Produktvorlagen können häufig verwendete Hersteller-/Farbkombinationen aus dem bereits vorhandenen kundenbezogenen Modul `extensions` wiederverwenden. Eine Lagerverwaltung ist nicht vorgesehen.
-- `treatments`, `orders`: eigene Modelle mit geschützten Verweisen auf Customer. Bestellungen kundenbezogen statt umfassender Lagerverwaltung.
-- `payments`: exakte Dezimalbeträge und getrennte Zahlungs-/Forderungszustände. Nur eingegangene Zahlungen zählen als Zahlungseingang.
-- `reporting`: lesende Abfragen über gespeicherte Daten, eindeutige Definition von Umsatz, Zahlung und Materialkosten.
+- `treatments` einschließlich Zahlungen und lesenden Berichten ist seit 0.6 implementiert; Details unten. Spätere Bestellungen können kundenbezogen an vorhandene Extensions anknüpfen. Keine Lagerverwaltung.
 - `assistant`: Adapter an vorhandene Dienste. Änderungen zuerst als Vorschlag und erst nach Bestätigung ausführen. Keine KI-Abhängigkeit in Phase 1.
 
 Es werden keine leeren Datenbanktabellen, Fake-Kalender oder funktionslosen Menüpunkte vorab gebaut. Kein Löschen von Kundinnen in Phase 1; Lösch-/Aufbewahrungsregeln werden vor echtem Betrieb fachlich festgelegt. Export ist bereits verfügbar.
@@ -64,3 +62,15 @@ Android öffnet die Google-Anmeldung im Systembrowser. Der optionale, separat zu
 Die bisherige OAuth-Integration wird für Android durch `CalendarContract` ersetzt: native `CalendarProviderBridge`, `appointments/device_sync.py`, `device_native.py`, WorkManager und ContentObserver. Geschäftliche Zuordnung über zufällige Marker/Provider-ID/Kalenderfingerabdruck, transaktionaler Vergleich vor Provider-Schreibvorgängen und manueller Konfliktentscheid. Private Vorkommen liefern ausschließlich Zeitgrenzen. Androids bestehende Kontosynchronisierung übernimmt den Google-Transport; kein eigener Server erforderlich. [Details und Grenzen](ANDROID-GERAETEKALENDER.md).
 
 `intake` ergänzt einen versionierten, strikt geprüften Textimport. Android ACTION_SEND text/plain und ausschließlich bewusst gelesene Zwischenablage liefern Text an den authentifizierten Python-Einstieg, ohne JavaScript-Brücke. Entwürfe bleiben sitzungsgebunden im RAM (30 Minuten); Vorschau, manuelle Kundenwahl, Validierung und endgültiger POST sind getrennte Schritte. Eine gemeinsame Datenbanktransaktion schreibt Fachobjekte, Historie und Importquittung. Keine KI-/OpenAI-API oder externen Linkabrufe. [Format und Bedienung](CHATGPT-IMPORT.md).
+
+## Gemeinsamer Kundenablauf 0.6
+
+`treatments` enthält `PriceOption`, `Treatment`, unveränderliche Preiszeilen, Extensions-Momentaufnahmen und `Payment`. Ein optionaler One-to-one-Verweis bindet einen Termin an genau eine Behandlung. Alle Fachänderungen liegen in `treatments/services.py`: Eigentümersperre, Versionsprüfung, exakte Decimal-Beträge, Preisvorschau mit Digest, idempotente Anlage/Buchungskennungen und atomare Historienereignisse. Referenzen auf Kunden, Termine und gebuchte Vorgänge sind gegen Löschen geschützt. Die Oberfläche übernimmt keine Besitzerzuordnung aus Eingaben.
+
+Preisoptionen sind benutzerbezogen; die anfängliche Liste ist leer. Reihenpreise sind Gesamtpreise je Reihenanzahl. Zusatzleistungen und ausdrücklich berechnete Extensions-Verkaufspreise ergeben ein Angebot. Individuelle Gesamtpreise werden als Gesamtvereinbarung mit transparenter Anpassungszeile gespeichert. Bestehende Preiszeilen bleiben bei Listenänderungen bestehen. Eingänge, echte Rückerstattungen und Storno fehlerhafter Buchungen haben getrennte Semantik; Geldbewegungen werden nur dokumentiert, nicht extern ausgeführt.
+
+`treatments/reports.py` berechnet Kunden- und Finanzkennzahlen aus realen Buchungen. Aggregation nur über Geldbuchungen verhindert vervielfachte Summen bei mehreren Preis-/Extensionszeilen. Leistungsdatum, Zahlungsdatum, zeitunabhängige offene Forderungen und Erstattungsbedarf bleiben getrennt. Besuche zählen abgeschlossene Behandlungen plus alte abgeschlossene Termine ohne Behandlung. Behandlung und verknüpfter Termin zählen einmal. Eine Terminabsage storniert nur eine noch geplante Behandlung; der Geräteabgleich verwendet denselben Dienst.
+
+Import v2 erweitert v1 durch paketweit eindeutige Referenzen. `intake/clinical.py` verwendet dieselben Formulare/Preisdienste und Buchungsregeln wie die normale Oberfläche. Vorhandene Vorgänge werden explizit ausgewählt. Das gesamte Paket einschließlich aller Geldbuchungen wird innerhalb der vorhandenen Bestätigungstransaktion gespeichert; Versionen und Preise werden erneut geprüft. `intake/clinical_format.py` validiert Struktur, Referenzen und Grenzen. Die bisherigen v1-Pakete bleiben gültig. Keine versteckte Preislistenänderung und keine automatische Speicherung.
+
+Android-Quellvorbereitung und Windows-Paketbau nehmen das Modul samt Migrationen mit. SQLite-Sicherungen enthalten die neuen Tabellen automatisch, das vorhandene Archivformat bleibt erhalten. Keine neue Sicherungsinfrastruktur. Bedienung und präzise Kennzahlendefinitionen: [BEHANDLUNGEN-ZAHLUNGEN.md](BEHANDLUNGEN-ZAHLUNGEN.md).

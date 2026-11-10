@@ -1,6 +1,6 @@
-# ChatGPT-Import auf Android (Testversion 0.5.1)
+# ChatGPT-Import auf Android (ab Testversion 0.5.1; Version 2 ab 0.6.0)
 
-Es werden keine OpenAI-API, Kontoverknüpfung und externen Server verwendet. ChatGPT erzeugt Text, Haarvinci validiert ihn lokal. Kundenakten, Haarprofile, kundenbezogene Extensions und Termine können in einem Paket übernommen werden. Keine Lagerbuchungen.
+Es werden keine OpenAI-API, Kontoverknüpfung und externen Server verwendet. ChatGPT erzeugt Text, Haarvinci validiert ihn lokal. Kundenakten, Haarprofile, kundenbezogene Extensions und Termine können in einem Paket übernommen werden. Version 2 ergänzt Behandlungen sowie Anzahlungen, Teil-/Restzahlungen und Rückerstattungen. Version 1 bleibt unverändert unterstützt. Keine Lagerbuchungen.
 
 ## Auf dem Pixel ausprobieren
 
@@ -96,3 +96,87 @@ Diesen Kundinnenblock im vollständigen Paket verwenden. Haarvinci verlangt dann
 - Termin: `customer_ref`, `data` mit `appointment_type` (genauer vorhandener deutscher Name, z. B. `Erstberatung`; unbekannte/mehrdeutige Namen in der Vorschau auswählen), `day`, `begin`, `finish`, optional `end_day`, `buffer_minutes` (0–240), `status` (`planned`, `confirmed`, `completed`, `cancelled`), `notes`. Voreinstellung geplant/kein Puffer. Ende nach Beginn, maximal 24 Stunden; zukünftige Termine nicht abgeschlossen. Mehrdeutige/nicht existierende Uhrzeiten bei Zeitumstellung werden erklärt und abgewiesen.
 
 Identische Extensions und identische Kunden-/Zeitkombinationen bei Terminen sowie Wiederholungen innerhalb des Pakets werden abgefangen. Ähnliche Kundinnen verlangen ausdrückliche Zuordnung oder eine bewusste andere Neuanlage. Zeitüberschneidungen werden nicht automatisch freigegeben: zuerst Zeiten korrigieren oder später im normalen Terminformular bewusst entscheiden. Erneute Versions-, Dubletten- und Terminprüfung direkt vor der atomaren Speicherung; bei zwischenzeitlichen Änderungen wird nichts teilweise übernommen. Importpakete sind Daten, keine Anweisungen zur Ausführung von Code oder Netzwerkaufrufen.
+
+## Version 2: zusammengehörige Behandlungen und Geldbuchungen
+
+Die Kennzeichnung bleibt `"format": "haarvinci.import"`; für die Erweiterung `"version": 2` verwenden. Die v1-Kunden-/Extensions-/Terminfelder bleiben gültig. Neu sind die optionalen Listen `treatments` (höchstens 25) und `payments` (höchstens 50). Die Grenze von 64 KiB gilt weiterhin. Es wird niemals vor der abschließenden Bestätigung gespeichert.
+
+`ref` ist jetzt im ganzen Paket eindeutig: Kundinnen, Extensions, Termine, Behandlungen und Zahlungen verwenden verschiedene kurze Kennungen. Extensions und Termine können eine eigene `ref` erhalten; fehlt sie, werden `x1`, `x2` bzw. `a1`, `a2` vergeben. Für verknüpfte Pakete immer explizite Kennungen verwenden. Die Referenzen sind keine Datenbank-IDs.
+
+### Vollständiges fiktives Beispiel
+
+Neue Kundin mit Haarprofil, Extensions, künftigem Termin und Behandlung für einen individuell vereinbarten Gesamtpreis von 120,00 €, dazu eine dokumentierte Anzahlung von 30,00 €. Nach Bestätigung verbleiben 90,00 € offen. Datum, Kontaktdaten und Beträge sind ausschließlich fiktiv. Beim Wiederverwenden eine neue UUID einsetzen und tatsächliche fiktive Testdaten wählen; Zahlungsdaten dürfen nicht in der Zukunft liegen.
+
+```json
+{
+  "format": "haarvinci.import",
+  "version": 2,
+  "id": "a41d462f-94d5-407a-98da-86fdc90d9754",
+  "customers": [{
+    "ref": "k1", "mode": "new",
+    "data": {
+      "first_name": "Jana", "last_name": "Paketfiktiv",
+      "email": "jana.paket@example.com", "natural_color": "Braun",
+      "desired_length": "50"
+    }
+  }],
+  "extensions": [{
+    "ref": "x1", "customer_ref": "k1",
+    "data": {
+      "manufacturer": "Fiktivhaar Atelier", "extension_type": "Tressen",
+      "color": "Braun", "length_cm": "50", "weight_g": "100",
+      "purchase_price": "50,00", "sale_price": "100,00",
+      "assigned_on": "2026-11-10", "delivery_status": "planned"
+    }
+  }],
+  "appointments": [{
+    "ref": "a1", "customer_ref": "k1",
+    "data": {
+      "appointment_type": "Erstberatung", "day": "2026-11-20",
+      "begin": "10:00", "finish": "11:00", "status": "planned"
+    }
+  }],
+  "treatments": [{
+    "ref": "b1", "customer_ref": "k1", "mode": "new",
+    "appointment_ref": "a1", "extension_refs": ["x1"], "services": [],
+    "data": {
+      "performed_on": "2026-11-20", "description": "Fiktive Gesamtvereinbarung",
+      "status": "planned", "price_mode": "individual", "custom_price": "120,00",
+      "charge_extensions": false, "notes": "Fiktiver Test, kein realer Auftrag."
+    }
+  }],
+  "payments": [{
+    "ref": "z1", "treatment_ref": "b1",
+    "data": {
+      "kind": "receipt", "purpose": "deposit", "amount": "30,00",
+      "booked_on": "2026-11-10", "method": "cash", "notes": "Fiktive Anzahlung"
+    }
+  }]
+}
+```
+
+### Behandlungen
+
+- Pflicht: `ref`, `customer_ref`, `mode` (`new` oder `existing`). Optional `hint` bis 200 Zeichen, `data`, `appointment_ref`, `extension_refs`, `services`.
+- Neue Behandlung: `data.performed_on` (YYYY-MM-DD), `description` (bis 200 Zeichen), `status` (`planned` oder `completed`), `price_mode` (`weaving` oder `individual`). Bei Weaving `rows` (1–20) und eine vorhandene aktive Preisstaffel; bei individuellem Preis `custom_price` als positiver/Null-Gesamtbetrag mit maximal zwei Nachkommastellen. Fehlende Pflichtwerte werden in der Vorschau angezeigt und müssen ergänzt werden.
+- Optional `data.notes` (bis 10.000 Zeichen), `data.charge_extensions` (`true`/`false`, Standard false). `custom_price` ist der vollständige Gesamtpreis. Die Verkaufspreise der Extensions werden nur bei der ausdrücklichen Berechnungsoption zusätzlich zum Weaving-Preis berechnet.
+- `services`: Liste der eindeutigen Namen vorhandener aktiver Zusatzleistungen, z. B. `["Fiktive Haarwäsche"]`. Der Import legt keine Preislisteneinträge an. Unbekannte/mehrdeutige Namen werden abgewiesen; vorab die eigene Preisliste ergänzen oder das Paket korrigieren.
+- `appointment_ref` und `extension_refs` verweisen auf Einträge desselben Pakets und derselben Kundin. Bereits vorhandene Termine/Extensions können stattdessen in der Vorschau aus dieser Kundenakte ausgewählt werden. Ein Termin darf nur eine Behandlung besitzen.
+- Bestehende Behandlung: `mode: "existing"`, `customer_ref` auf eine manuell ausgewählte bestehende Kundenakte, optional `hint`. `data` leer lassen, keine Preis-/Termin-/Extensionsänderungen mitliefern. Die konkrete Behandlung wird in der Vorschau mit Vorgangskennung und offenem Betrag manuell ausgewählt. Dieser Modus ergänzt Geldbuchungen; Behandlungsänderungen erfolgen im normalen Formular.
+- Mehrere zusammengehörige Vorgänge sind möglich. Identische neue Behandlungen und mehrfache Verwendung eines Termins werden abgefangen. Zukünftige Behandlungen/Termine können nicht als durchgeführt übernommen werden.
+
+### Geldbuchungen
+
+- Pflicht: `ref`, `treatment_ref` auf eine Behandlung im Paket, `data` mit `amount`, `booked_on` und `method`. `kind`: `receipt` (Standard) oder `refund`.
+- Eingänge: `purpose` ist `deposit` (Anzahlung), `partial` (Teilzahlung, Standard) oder `final` (vollständige Restzahlung). `amount` größer null, maximal 9.999.999,99 €, Text mit Komma oder Punkt ohne Tausendertrennzeichen. `booked_on` ist ein tatsächliches Datum bis heute. `method`: `cash`, `bank`, `card` oder `other`; `notes` optional bis 2.000 Zeichen.
+- Rückgabe: `kind: "refund"`, `purpose: "refund"` und begründende `notes`. `refund_of` verweist auf einen **vorhergehenden** Eingang derselben Behandlung innerhalb des Pakets. Bei einem bestehenden Vorgang kann stattdessen der konkrete ursprüngliche Zahlungseingang manuell gewählt werden. Mehrere Rückgaben dürfen dessen erstattbaren Anteil zusammen nicht überschreiten.
+- Alle Buchungen werden in Listenreihenfolge geprüft. Zusammengehörige Teilzahlungen reduzieren denselben Restbetrag. Restzahlung muss diesen vollständig ausgleichen; Überzahlungen, Eingänge für stornierte Vorgänge und zu hohe Rückgaben werden abgewiesen. Für Stornierungen/Korrekturen die normale Behandlungsoberfläche nutzen; der Import führt keine Stornierungen aus.
+- Identische Geldbuchungen gegen vorhandene Einträge und innerhalb des Pakets verlangen eine Korrektur statt stiller Duplikate. Die Paketquittung und deterministischen Buchungskennungen verhindern erneutes Buchen desselben Imports. Bei einer bewusst tatsächlich gleichen zusätzlichen Zahlung den normalen Zahlungsdialog verwenden.
+
+Preise und bestehende Vorgänge werden direkt vor der Übernahme nochmals geprüft. Bei zwischenzeitlichen Änderungen muss die Vorschau neu geprüft werden; das gesamte Paket bleibt ungespeichert. Ein Preisrennen oder eine fehlerhafte letzte Teilzahlung darf keine bereits angelegte Teilkundin hinterlassen.
+
+### Prompt für Version 2
+
+> Erstelle ein einziges JSON-Paket `haarvinci.import`, Version 2, nach der vorstehenden Feldreferenz. Nur einen JSON-Codeblock ausgeben. Neue UUID als `id`; paketweit eindeutige `ref` für Kundinnen, Extensions, Termine, Behandlungen und Geldbuchungen. Erfinde keine Fakten, Kontakte, Preise oder eingegangenen Zahlungen. Unklare Angaben erfragen oder leer lassen, damit Haarvinci fehlende Pflichtfelder zeigt. Verknüpfe über `customer_ref`, `appointment_ref`, `extension_refs` und `treatment_ref`. Bestehende Kundinnen und Behandlungen mit `mode: "existing"` und Suchhinweis kennzeichnen; keine Datenbank-IDs erfinden, keine vorhandenen Behandlungen im Import umschreiben. Für neue Behandlungen vorhandene Weaving-Preise plus benannte Zusatzleistungen oder ausdrücklich vereinbarten individuellen Gesamtpreis verwenden. Zahlung nur bei ausdrücklich genanntem tatsächlichem Eingang, mit Betrag, Datum, Zahlungsweg und Buchungsart. Anzahlungen `deposit`, Teilzahlungen `partial`, vollständige Restzahlung `final`. Echte Rückgabe `refund` mit Grund und eindeutigem ursprünglichem Eingang. Keine Lager-, Bank- oder automatischen Aktionen. Alle Daten werden von mir in Haarvinci geprüft und erst nach Bestätigung gespeichert. Beispiele sind fiktiv und dürfen nicht als meine Angaben übernommen werden.
+
+Berechnungsregeln und ein vollständiger manueller Testablauf: [BEHANDLUNGEN-ZAHLUNGEN.md](BEHANDLUNGEN-ZAHLUNGEN.md). Echte ChatGPT-Textübergabe und Google-Kontosynchronisierung auf dem Pixel bleiben unabhängig vom Importformat separat zu prüfen.

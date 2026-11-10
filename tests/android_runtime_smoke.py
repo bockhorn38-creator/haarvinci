@@ -124,10 +124,11 @@ def main():
                 "extensions": position_id,
                 "notes": "Behandlung vor der Sicherung",
             }
-            page, _ = post("/behandlungen/neu/", treatment_data | {"action": "preview"})
-            assert "Deine Preisübersicht" in page
+            page, _ = get("/behandlungen/neu/")
             creation_key = re.search(r'name="creation_key" value="([^"]+)"', page).group(1)
             treatment_data["creation_key"] = creation_key
+            page, _ = post("/behandlungen/neu/", treatment_data | {"action": "preview"})
+            assert "Deine Preisübersicht" in page
             quote_digest = re.search(r'name="quote_digest" value="([^"]+)"', page).group(1)
             page, treatment_url = post(
                 "/behandlungen/neu/",

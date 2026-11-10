@@ -58,7 +58,7 @@ public class AndroidWorkflowTest {
         throw new AssertionError("Erwartete Seite " + path + " mit " + text + "; letzte Seite: " + current);
     }
     private void fill(JSONObject fields) throws Exception {
-        js("for(const [name,value] of Object.entries(" + fields + ")){const input=document.querySelector('[name=\"'+name+'\"]');if(input.type==='checkbox')input.checked=(value==='on'||value==='true');else input.value=value;}document.querySelector('form').requestSubmit();");
+        js("const form=document.querySelector('form');for(const [name,value] of Object.entries(" + fields + ")){const input=form.elements.namedItem(name);if(!input)throw new Error('Formularfeld fehlt: '+name);if(input.type==='checkbox')input.checked=(value==='on'||value==='true');else input.value=value;}form.requestSubmit();");
     }
     private String waitForText(String text) throws Exception {
         long deadline = System.currentTimeMillis() + 45000;

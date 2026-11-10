@@ -126,3 +126,11 @@ Prüfung am **10. November 2026**, ausschließlich fiktive Kunden, Testpreise un
 - Ruff, Formatierung, Migrationsprüfung und Sicherheitsprüfung des produktiven Serverprofils ohne Fehler/Warnungen erfolgreich. Die Migration zur Vorgangskennung vergibt für bestehende Vorgänge getrennte Schlüssel; kein geteilter UUID-Standardwert.
 
 Noch separat auf dem physischen Pixel zu prüfen: echte Google-Kontosynchronisierung mit den ausgewählten Geräte-/Google-Kalendern, Energieverwaltung des Geräts und konkrete Text-/Linkübergabe der dort installierten ChatGPT-App. Reale Zahlungen, Geschäftstarife, Steuer-/Rechnungsprüfung und Produktivabnahme gehören nicht zu diesen fiktiven Tests. Keine zusätzlichen Cloud-Dienste, Bankenschnittstelle, Lagerverwaltung oder OpenAI-API eingerichtet.
+
+### Verifizierter direkter Download 0.6.0
+
+[Bereitstellungslauf 42834027688](https://github.com/bockhorn38-creator/haarvinci/actions/runs/42834027688) vollständig erfolgreich. Er hat zuerst den erfolgreichen Android-Lauf und den exakten Quellstand geprüft, die Originaldatei übernommen, Prüfsumme/Signatur/Paketversion kontrolliert und nur die neue Version im bestehenden Download-Zweig ergänzt. Kein Neubau oder Neusignieren für den Download; ältere APKs erhalten. Download-Commit: `57479698dea4a159bf7e33d32ced8c4503894331`. Repository-Sichtbarkeit unverändert.
+
+**[Einzelne APK 0.6.0 direkt herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/android-test-downloads/Haarvinci-Android-Test-0.6.0.apk)** – **54.919.260 Bytes**. SHA-256: `551eb9ca3fd3d98b84691cf16d2d7337829b90a4a635c26d520ba01bc7eac5b6`. Der vollständige anonyme Download wurde sowohl im Bereitstellungsworkflow als auch anschließend aus der Entwicklungsumgebung ausgeführt: HTTP 200, einzelne APK (`application/octet-stream`), identische Original-Prüfsumme. Kein ZIP und keine Anmeldung erforderlich. Prüfsumme und Signaturinformationen stehen im Unterordner `0.6.0` des Download-Zweigs.
+
+Zertifikat SHA-256: `23ee36346055bb1842ecba40c79c43d960722260593f13a1f149c597b8fdaa24`. Gegenüber der tatsächlich heruntergeladenen 0.5.1-Signatur nachweislich abweichend; deshalb die alte Test-App deinstallieren und 0.6.0 frisch installieren. Dabei werden deren lokale Testdaten gelöscht. Vorher bei Bedarf die vorhandene Sicherungsfunktion verwenden. Die Testphase bleibt auf fiktive Daten beschränkt.

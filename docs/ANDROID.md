@@ -69,7 +69,7 @@ Der lokale Kalender funktioniert vollständig ohne Google und ohne Internet. Ein
 
 ### Von einer älteren Testversion wechseln
 
-Der Versionscode ist **5**. Bei einer abweichenden Testsignatur verlangt Android eine Neuinstallation: die alte Test-App deinstallieren und diese APK frisch installieren. Der konkrete Signaturvergleich steht im [Prüfbericht](PRUEFUNG.md). Dabei gehen lokale Testdaten verloren; dies ist für diese Entwicklungsphase ausdrücklich akzeptiert. Beim ersten Start wieder einen eigenen Zugang und bei Bedarf sechs fiktive Kundinnen anlegen. Wer die Daten behalten möchte, vorher eine `.haarvinci`-Sicherung an einem getrennten Ort erstellen. Keine echte Kundendaten in dieser Testversion verwenden.
+Der Versionscode ist **5**. Die geprüfte Testsignatur unterscheidet sich von 0.5.1: die alte Test-App deinstallieren und diese APK frisch installieren. Der konkrete Signaturvergleich steht im [Prüfbericht](PRUEFUNG.md). Dabei gehen lokale Testdaten verloren; dies ist für diese Entwicklungsphase ausdrücklich akzeptiert. Beim ersten Start wieder einen eigenen Zugang und bei Bedarf sechs fiktive Kundinnen anlegen. Wer die Daten behalten möchte, vorher eine `.haarvinci`-Sicherung an einem getrennten Ort erstellen. Keine echten Kundendaten in dieser Testversion verwenden.
 
 ### Die neuen Bereiche ausprobieren
 

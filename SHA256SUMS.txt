@@ -1,3 +1,4 @@
 4bb48592cf44ef346348bb5387adf7d09c631f5f0b81df6c78f66fc2e928bd70  HaarVinci-Homepage-Vorschau-1.0.0.zip
 38600c8465ea61c9a0e8a4909935fa44bc0a3fa4379caa0d50fe14da9526e708  HaarVinci-Homepage-Vorschau-1.0.1.zip
 260db5d8a7e4a090c701ae4430285e4e08e72b59f70d9791e7f23fbee8c5912c  HaarVinci-Homepage-Vorschau-1.0.2.zip
+7b0b14a098eaedb8073ae13b5a34995156ddcfbfcea66c8d4bdbea04db900ea4  HaarVinci-Homepage-Vorschau-1.0.3.zip

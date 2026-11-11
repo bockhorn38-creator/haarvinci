@@ -1,24 +1,24 @@
 # HaarVinci – Homepage-Vorschau
 
-**[Aktuelle Version 1.0.2 herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/website-test-downloads/HaarVinci-Homepage-Vorschau-1.0.2.zip)** – ZIP, etwa 24.8 MB, ohne Anmeldung.
+**[Aktuelle Version 1.0.3 herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/website-test-downloads/HaarVinci-Homepage-Vorschau-1.0.3.zip)** – ZIP, etwa 24.9 MB, ohne Anmeldung.
 
-ZIP vollständig entpacken und `HaarVinci-Vorschau.html` öffnen. Quellcode, exportierte Originalframes, Herkunftsnachweis, Startanleitung, Prüfbericht und Smartphone-/Desktop-Ansichten liegen bei.
+ZIP vollständig in einen neuen Ordner entpacken und `HaarVinci-Vorschau.html` darin öffnen.
 
-## Echte Reel-Standbilder
+## WhatsApp sofort sichtbar
 
-- Zwei Ergebnisse aus den Reels zu roten Extensions und dunklem Glanz.
-- Drei bebilderte Behandlungsschritte: vorbereitete Ausgangslage, Cornrow-Basis, Finish.
-- Conny bei der Arbeit aus dem Behandlungsreel; das freigegebene Porträt bleibt erhalten.
-- Keine Video-/Instagram-Einbettung, keine erfundenen Vorher-Nachher-Paare. Bestehendes Design, Preise und Funktionen erhalten.
-- Reel 04 konnte wegen der 32-MiB-Übertragungsgrenze nicht heruntergeladen werden. Der Arbeitsmoment stammt stattdessen aus Reel 02.
+Der WhatsApp-Button steht jetzt direkt in der angehefteten Kopfzeile: auf Smartphone, Tablet und PC, auch ohne JavaScript. Unter 400 Pixeln als Symbol mit zugänglichem Namen, darüber zusätzlich mit Beschriftung. Der bestehende mobile schwebende Kontakt mit Kollisionsschutz bleibt ergänzend erhalten.
 
-[Reel-Zuordnung, geänderte Dateien und Prüfungen](AENDERUNGEN-1.0.2.md). **32 lokale Chromium-/Playwright-Prüfungen bestanden**, darunter alle 29 bisherigen Prüfungen sowie responsive Medien-, Metadaten- und Performanceprüfungen. Ansichten ab 320 Pixeln getestet. Quellstand `ec7ffb23817678c0f7b00ea16d812ea606f262af`.
+**40 lokale Browserprüfungen bestanden**, darunter acht neue Prüfungen der sofortigen Erreichbarkeit, des Scrollens, korrekten Linkziels und der eingebetteten Vorschau. Keine Nachricht wurde versendet. Alle bestehenden Bilder, Preise und Funktionen bleiben erhalten.
 
-Der direkte file://-Aufruf ist im Cloud-Browser gesperrt; die vollständig eingebettete Vorschau wurde über erlaubte lokale Seitenantworten ohne zusätzliche Ressourcenabrufe geprüft. Den tatsächlichen Doppelklick und die WhatsApp-/E-Mail-Zuordnung auf dem eigenen Gerät prüfen.
+[Geänderte Dateien und Prüfungen](AENDERUNGEN-1.0.3.md). Quellstand `8aad09424a0b8b8d1860b33a8cea99dcdd311773`. Quellen, Anleitung, Prüfbericht und aktuelle Ansichten liegen im ZIP bei.
 
-Die Vorschau-ZIPs einschließlich Fotos werden mit ausdrücklicher Nutzerfreigabe öffentlich angeboten. Diese Downloadfreigabe ist kein Website-Livegang bei IONOS. Vollständige Rechtstexte und finale Livefreigaben bleiben erforderlich. Die Testfassung bleibt noindex. Keine DNS-, Mail-, Vertrags- oder Verwaltungs-App-Änderung vorgenommen.
+Die Cloud sperrt direkte file://-Navigation. Der vollständig eingebettete HTML-Inhalt wurde über erlaubtes lokales HTTP ohne weitere Ressourcenabrufe geprüft. Den tatsächlichen Doppelklick und die Zuordnung zur WhatsApp-App auf dem eigenen Gerät prüfen.
+
+Der öffentliche ZIP-Download einschließlich Fotos ist vom Nutzer ausdrücklich freigegeben. Er ist kein Livegang bei IONOS; vollständige Rechtsinhalte und finale Livefreigaben bleiben erforderlich. Kein Eingriff in DNS, Mail, Verträge oder die Verwaltungs-App.
 
 ## Erhaltene Versionen
+
+- [1.0.3 – WhatsApp sofort erreichbar](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/website-test-downloads/HaarVinci-Homepage-Vorschau-1.0.3.zip) · SHA-256 `7b0b14a098eaedb8073ae13b5a34995156ddcfbfcea66c8d4bdbea04db900ea4`.
 
 - [1.0.2 – aktuelle Reel-Erweiterung](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/website-test-downloads/HaarVinci-Homepage-Vorschau-1.0.2.zip) · SHA-256 `260db5d8a7e4a090c701ae4430285e4e08e72b59f70d9791e7f23fbee8c5912c`.
 - [1.0.1 – Porträt, WhatsApp und SEO](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/website-test-downloads/HaarVinci-Homepage-Vorschau-1.0.1.zip) · SHA-256 `38600c8465ea61c9a0e8a4909935fa44bc0a3fa4379caa0d50fe14da9526e708`.

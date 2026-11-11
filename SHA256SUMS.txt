@@ -2,3 +2,4 @@
 38600c8465ea61c9a0e8a4909935fa44bc0a3fa4379caa0d50fe14da9526e708  HaarVinci-Homepage-Vorschau-1.0.1.zip
 260db5d8a7e4a090c701ae4430285e4e08e72b59f70d9791e7f23fbee8c5912c  HaarVinci-Homepage-Vorschau-1.0.2.zip
 7b0b14a098eaedb8073ae13b5a34995156ddcfbfcea66c8d4bdbea04db900ea4  HaarVinci-Homepage-Vorschau-1.0.3.zip
+12cfefbb41f593480fc28c2e1d75b4dee3d6c6ec38c7836712111b1b6eb172de  HaarVinci-fuer-Conny.html

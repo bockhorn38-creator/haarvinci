@@ -1,5 +1,15 @@
 # HaarVinci – Homepage-Vorschau
 
+## Einzelne HTML-Datei für Conny
+
+**[HaarVinci-fuer-Conny.html speichern](https://github.com/bockhorn38-creator/haarvinci/blob/website-test-downloads/HaarVinci-fuer-Conny.html)** · etwa 3.5 MB · kein ZIP und keine Begleitdateien.
+
+Auf der GitHub-Dateiseite den Download-Pfeil („Download raw file“) verwenden. Anschließend die gespeicherte HTML-Datei in WhatsApp als Dokument anhängen. Conny lädt die Datei herunter und öffnet sie in einem Browser. Der Raw-Link kann Quelltext anzeigen; er ist keine gehostete Website.
+
+Die komplette Vorschau auf Basis von 1.0.3 einschließlich Bildern, Schriften, Lizenzen, WhatsApp-Button und aufklappbaren Rechtsentwürfen ist eingebettet. **43 Browserprüfungen erfolgreich**, darunter drei neue Prüfungen dieser Einzeldatei. Quellstand `28bc88b780cda689780e6f4e4c2f520ad3305781`. SHA-256 `12cfefbb41f593480fc28c2e1d75b4dee3d6c6ec38c7836712111b1b6eb172de`.
+
+[Anleitung und Prüfgrenzen](EINZELDATEI-FUER-CONNY.md). Kein WhatsApp-Versand ausgeführt; das Öffnen auf dem Privatgerät bleibt zu prüfen. Kein Livegang bei IONOS. Die bisherigen ZIPs bleiben unverändert.
+
 **[Aktuelle Version 1.0.3 herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/website-test-downloads/HaarVinci-Homepage-Vorschau-1.0.3.zip)** – ZIP, etwa 24.9 MB, ohne Anmeldung.
 
 ZIP vollständig in einen neuen Ordner entpacken und `HaarVinci-Vorschau.html` darin öffnen.

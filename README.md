@@ -1,6 +1,18 @@
 # HaarVinci – Homepage-Vorschau
 
-## Einzelne HTML-Datei für Conny
+## Signature 1.1 – neue Design-Vorschau
+
+**[Vorschau-ZIP herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/website-test-downloads/HaarVinci-Signature-Vorschau-1.1.0.zip)** · etwa 30.1 MB · Quellen, Ansichten und Prüfbericht enthalten.
+
+**[Einzelne Handy-HTML für Conny speichern](https://github.com/bockhorn38-creator/haarvinci/blob/website-test-downloads/HaarVinci-Signature-1.1-fuer-Conny.html)** · etwa 3.4 MB. Auf der Dateiseite den Download-Pfeil verwenden, dann die HTML-Datei in WhatsApp als Dokument versenden. Alle Bilder und Schriften sind eingebettet; kein ZIP nötig.
+
+Neues Signature-Design, grüne WhatsApp-Kontakte, früher Ergebnis-/Vertrauensbereich, Presseverweis, kompakte FAQ, klare Anfahrt zum 1. Obergeschoss und Parkplatzanfrage am Eichkamp. **51 lokale Browserprüfungen bestanden**, einschließlich privater Galerie-/Release-Trennung und stabiler Kopfzeile bei verzögertem JavaScript.
+
+**Offen:** Das angekündigte neue Bild-ZIP beziehungsweise die acht neuen Vorher-Nachher-JPGs fehlen noch. Die neue Galerie ist mit fiktiven Testflächen geprüft; es wird keine Integration oder visuelle Abnahme echter neuer Bildpaare behauptet. Diese Downloads enthalten die Bestandsmotive aus 1.0.3, keine neuen ungeklärten Kundinnenfotos. Der echte private Galeriepfad bleibt getrennt und unveröffentlicht.
+
+[Änderungen und Medienstatus](AENDERUNGEN-1.1.0.md) · [Prüfungen und offene Punkte](PRUEFUNG-Signature-1.1.0.md). Quellstand `0c124ac880996fa0f2f19235681b6b9522600e2f`. Kein Livegang, sämtliche Freigabesperren bleiben erhalten. Keine IONOS-, Domain-, DNS-, Mail- oder App-Änderung. Alle bisherigen Downloads bleiben unverändert.
+
+## Bisherige Einzeldatei für Conny (1.0.3)
 
 **[HaarVinci-fuer-Conny.html speichern](https://github.com/bockhorn38-creator/haarvinci/blob/website-test-downloads/HaarVinci-fuer-Conny.html)** · etwa 3.5 MB · kein ZIP und keine Begleitdateien.
 
@@ -10,7 +22,7 @@ Die komplette Vorschau auf Basis von 1.0.3 einschließlich Bildern, Schriften, L
 
 [Anleitung und Prüfgrenzen](EINZELDATEI-FUER-CONNY.md). Kein WhatsApp-Versand ausgeführt; das Öffnen auf dem Privatgerät bleibt zu prüfen. Kein Livegang bei IONOS. Die bisherigen ZIPs bleiben unverändert.
 
-**[Aktuelle Version 1.0.3 herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/website-test-downloads/HaarVinci-Homepage-Vorschau-1.0.3.zip)** – ZIP, etwa 24.9 MB, ohne Anmeldung.
+**[Bisherige Version 1.0.3 herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/website-test-downloads/HaarVinci-Homepage-Vorschau-1.0.3.zip)** – ZIP, etwa 24.9 MB, ohne Anmeldung.
 
 ZIP vollständig in einen neuen Ordner entpacken und `HaarVinci-Vorschau.html` darin öffnen.
 

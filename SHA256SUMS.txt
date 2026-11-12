@@ -5,3 +5,5 @@
 12cfefbb41f593480fc28c2e1d75b4dee3d6c6ec38c7836712111b1b6eb172de  HaarVinci-fuer-Conny.html
 f86c8b65e05a20eb55db812f4495a0a9886dc2066a587eca403157b349074435  HaarVinci-Signature-Vorschau-1.1.0.zip
 5c1d84c07f6150d9c4bb77ced5671a9e7e16c3699e54686cee0a29ed9968d1ad  HaarVinci-Signature-1.1-fuer-Conny.html
+8e2e2b3dd1478ee7be91e26c2d2eaf6c18f7df9e42ab7a827926a2dbd60e0db4  HaarVinci-Signature-Vorschau-1.1.1.zip
+761cd29e45fb37f9159e247cb82aac1e2ef8de59659d28e44587aaa13a41fd7a  HaarVinci-Signature-1.1.1-fuer-Conny.html

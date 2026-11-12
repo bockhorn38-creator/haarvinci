@@ -1,6 +1,20 @@
 # HaarVinci – Homepage-Vorschau
 
-## Signature 1.1 – neue Design-Vorschau
+## Aktuell: Signature 1.1.1
+
+**[Handy-HTML für Conny herunterladen](https://github.com/bockhorn38-creator/haarvinci/blob/website-test-downloads/HaarVinci-Signature-1.1.1-fuer-Conny.html)** · 3,4 MB. Auf der Dateiseite den Download-Pfeil verwenden und die gespeicherte HTML-Datei im Browser öffnen. Bei WhatsApp als Dokument versenden. Bilder, Schriften und Lizenztexte sind eingebettet. Der Raw-Endpunkt kann Quelltext anzeigen; dies ist ein Dateidownload und keine gehostete Website.
+
+**[Vollständiges Vorschau-ZIP herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/website-test-downloads/HaarVinci-Signature-Vorschau-1.1.1.zip)** · 30,5 MB · Quellen, Ansichten und Prüfbericht.
+
+Neu: große Instagram- und Google-Bewertungsbuttons direkt oben; drei gekennzeichnete Auszüge aus den bereitgestellten öffentlichen Google-Rezensionen mit ihren individuellen fünf Sternen. Google-Profil und Bewertungsabgabe sind getrennt. Kein unbelegter Gesamtdurchschnitt, Zähler oder Live-Widget.
+
+**Timo Bockhorns ausdrückliche Foto-Freigabe ist übernommen.** Die acht neuen Vorher-Nachher-JPGs fehlen hier weiterhin als zugängliche Dateien; sie sind im verfügbaren älteren ZIP nicht enthalten. Daher sind die vier neuen Bildpaare noch nicht in dieser Ausgabe. Ein kleines ZIP mit den acht JPGs genügt; eine erneute Foto-Freigabe ist nicht nötig. Die Ausgabe enthält die vorhandenen echten Reel-Ergebnisse, keine fiktiven Ersatzbilder.
+
+**53 Browserprüfungen bestanden**, dazu mobile Ansichten bei 390 und 412 Pixeln und Desktop bei 1440 Pixeln kontrolliert. [Änderungen](AENDERUNGEN-1.1.1.md) · [Prüfbericht und Grenzen](PRUEFUNG-Signature-1.1.1.md). Quellstand `40a3c85d63f4169a86c1fe63a2a83a460e15873b`.
+
+Kein Livegang bei IONOS. Bestehende Downloads bleiben unverändert; Android-/Windows-/Django-App, DNS und E-Mail bleiben unberührt. Die folgenden Abschnitte dokumentieren ältere Ausgaben und deren damaligen Stand.
+
+## Erhaltene Signature-Vorschau 1.1.0
 
 **[Vorschau-ZIP herunterladen](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/website-test-downloads/HaarVinci-Signature-Vorschau-1.1.0.zip)** · etwa 30.1 MB · Quellen, Ansichten und Prüfbericht enthalten.
 

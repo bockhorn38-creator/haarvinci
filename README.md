@@ -1,3 +1,12 @@
+# HaarVinci 1.3.0 – sichere Download-Dateien
+
+- [Gesamtpaket als ZIP](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/website-test-downloads/HaarVinci-1.3.0-Alles-AES.zip) – Astro-Projekt, HTML, acht Galerieauslieferungen, Video, PDF-Ratgeber, Screenshots und Dokumentation.
+- [Nur die Handy-HTML als ZIP](https://github.com/bockhorn38-creator/haarvinci/raw/refs/heads/website-test-downloads/HaarVinci-1.3.0-Handy-HTML-AES.zip) – kleinere Datei für die eigenständige HTML-Vorschau.
+
+AES-256-verschlüsselt; Passwort separat im Chat. Kein Website-Livegang. [Anleitung und Grenzen](DOWNLOAD-1.3.0.md).
+
+---
+
 # HaarVinci – aktuelle Vorschau-Downloads
 
 ## Aktuell: Version 1.2.0
